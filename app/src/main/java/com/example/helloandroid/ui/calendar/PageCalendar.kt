@@ -1,7 +1,15 @@
 package com.example.helloandroid.ui.calendar
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,11 +43,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,8 +64,11 @@ import com.example.helloandroid.entity.TrainingSessionEntity
 import com.example.helloandroid.entity.model.formatDate
 import com.example.helloandroid.navigation.Screen
 import com.example.helloandroid.viewmodel.CalendarViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
+import kotlin.math.abs
 
 @Composable
 fun PageCalendar(
@@ -64,12 +77,76 @@ fun PageCalendar(
         factory = CalendarViewModel.factory
     )
 ) {
+    val coroutineScope = rememberCoroutineScope()
     var currentYear by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
     var currentMonth by remember { mutableStateOf(Calendar.getInstance().get(Calendar.MONTH)) }
 
     var selectedDateSessions by remember { mutableStateOf<List<TrainingSessionEntity>?>(null) }
 
     val allSessions by viewModel.allSessions.collectAsStateWithLifecycle()
+
+    // 滑动偏移量
+    var dragOffset by remember { mutableStateOf(0f) }
+    val animatedOffset = remember { Animatable(0f) }
+
+    // ✅ 切换方向：true = 向右（上一月），false = 向左（下一月）
+    var swipeDirection by remember { mutableStateOf(true) }
+
+    // ✅ 月份切换的 key（用于 AnimatedContent）
+    val monthKey = remember(currentYear, currentMonth) {
+        MonthKey(currentYear, currentMonth)
+    }
+
+    // ✅ 切换月份函数
+    fun goToPrevMonth() {
+        swipeDirection = false
+        if (currentMonth == 0) {
+            currentMonth = 11
+            currentYear--
+        } else {
+            currentMonth--
+        }
+    }
+
+    fun goToNextMonth() {
+        swipeDirection = true
+        if (currentMonth == 11) {
+            currentMonth = 0
+            currentYear++
+        } else {
+            currentMonth++
+        }
+    }
+
+    // ✅ 根据滑动距离切换月份
+    fun handleDrag(deltaX: Float) {
+        dragOffset += deltaX
+        // 限制最大偏移量，防止过度滑动
+        val maxOffset = 300f
+        coroutineScope.launch {
+            animatedOffset.snapTo(dragOffset.coerceIn(-maxOffset, maxOffset))
+        }
+    }
+
+    fun finishDrag() {
+        val threshold = 150f
+        coroutineScope.launch {
+            if (dragOffset > threshold) {
+                // 向右滑动 → 上一月
+                goToPrevMonth()
+                // 滑动动画到0
+                animatedOffset.animateTo(0f, animationSpec = tween(300))
+            } else if (dragOffset < -threshold) {
+                // 向左滑动 → 下一月
+                goToNextMonth()
+                animatedOffset.animateTo(0f, animationSpec = tween(300))
+            } else {
+                // 回到原位
+                animatedOffset.animateTo(0f, animationSpec = tween(200))
+            }
+            dragOffset = 0f
+        }
+    }
 
     // 加载所有训练记录
     LaunchedEffect(Unit) {
@@ -107,51 +184,112 @@ fun PageCalendar(
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 12.dp)
-        ) {
-            // 星期标题
-            val weekDays = listOf("日", "一", "二", "三", "四", "五", "六")
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                weekDays.forEach { day ->
-                    Text(
-                        text = day,
-                        fontSize = 14.sp,
-                        fontWeight = if (day == "日" || day == "六") FontWeight.Bold else FontWeight.Normal,
-                        color = when (day) {
-                            "日" -> MaterialTheme.colorScheme.error
-                            "六" -> MaterialTheme.colorScheme.primary
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { offset ->
+                            dragOffset = 0f
                         },
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            dragOffset += dragAmount
+                        },
+                        onDragEnd = {
+                            // ✅ 根据滑动距离决定是否切换月份
+                            val threshold = 150f
+                            if (dragOffset > threshold) {
+                                // 向右滑动 → 上一月
+                                goToPrevMonth()
+                            } else if (dragOffset < -threshold) {
+                                // 向左滑动 → 下一月
+                                goToNextMonth()
+                            }
+                            dragOffset = 0f
+                        },
+                        onDragCancel = {
+                            dragOffset = 0f
+                        }
                     )
                 }
-            }
-
-            CalendarGrid(
-                year = currentYear,
-                month = currentMonth,
-                sessions = allSessions,
-                onDateClick = { sessions ->
-                    // ✅ 点击日期，显示底部弹窗
-                    if (sessions.isNotEmpty()) {
-                        selectedDateSessions = sessions
-                    }
-                },
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(vertical = 4.dp)
-            )
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp)
+            ) {
+                // 星期标题
+                val weekDays = listOf("日", "一", "二", "三", "四", "五", "六")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    weekDays.forEach { day ->
+                        Text(
+                            text = day,
+                            fontSize = 14.sp,
+                            fontWeight = if (day == "日" || day == "六") FontWeight.Bold else FontWeight.Normal,
+                            color = when (day) {
+                                "日" -> MaterialTheme.colorScheme.error
+                                "六" -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+// ✅ 日历网格 - 带滑动动画
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(vertical = 4.dp)
+                ) {
+                    AnimatedContent(
+                        targetState = monthKey,
+                        transitionSpec = {
+                            if (swipeDirection) {
+                                // 向右滑动：新页面从右进入，旧页面向左退出
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(300)
+                                ) togetherWith slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(300)
+                                ) using SizeTransform(clip = false)
+                            } else {
+                                // 向左滑动：新页面从左进入，旧页面向右退出
+                                slideInHorizontally(
+                                    initialOffsetX = { -it },
+                                    animationSpec = tween(300)
+                                ) togetherWith slideOutHorizontally(
+                                    targetOffsetX = { it },
+                                    animationSpec = tween(300)
+                                ) using SizeTransform(clip = false)
+                            }
+                        },
+                        label = "calendar"
+                    ) { targetState ->
+                        CalendarGrid(
+                            year = targetState.year,
+                            month = targetState.month,
+                            sessions = allSessions,
+                            onDateClick = { sessions ->
+                                if (sessions.isNotEmpty()) {
+                                    selectedDateSessions = sessions
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -372,6 +510,11 @@ data class CalendarDay(
     val date: Date,
     val sessions: List<TrainingSessionEntity> = emptyList()  // ✅ 该日期的训练记录
 )
+
+data class MonthKey(val year: Int, val month: Int) : Comparable<MonthKey> {
+    override fun compareTo(other: MonthKey): Int =
+        compareValuesBy(this, other, { it.year }, { it.month })
+}
 
 // ✅ 日期格子
 @Composable

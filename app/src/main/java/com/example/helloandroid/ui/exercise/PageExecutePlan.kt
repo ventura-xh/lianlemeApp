@@ -66,6 +66,7 @@ import androidx.navigation.NavHostController
 import com.example.helloandroid.entity.model.TrainingAction
 import com.example.helloandroid.entity.model.TrainingGroup
 import com.example.helloandroid.navigation.Screen
+import com.example.helloandroid.ui.common.NumberInputBottomSheet
 import com.example.helloandroid.viewmodel.ExecutePlanViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,6 +120,14 @@ fun PageExecutePlan(
     val showRestFloating by viewModel.showRestFloating.collectAsStateWithLifecycle()
     val remainingSeconds by viewModel.remainingSeconds.collectAsStateWithLifecycle()
     val restSeconds by viewModel.restSeconds.collectAsStateWithLifecycle()
+
+    // ✅ 数字输入对话框状态
+    var showNumberInput by remember { mutableStateOf(false) }
+    var editingActionIndex by remember { mutableStateOf(0) }
+    var editingGroupIndex by remember { mutableStateOf(0) }
+    var editingGroup by remember { mutableStateOf<TrainingGroup?>(null) }
+    var editingField by remember { mutableStateOf(0) } // 0=重量, 1=次数
+    var inputPanelHeight by remember { mutableStateOf(300.dp) }
 
     // ✅ 当 refreshTrigger 变化时，什么都不做，但会触发重组
     val refreshKey = refreshTrigger
@@ -239,12 +248,6 @@ fun PageExecutePlan(
                             onToggleGroupCompleted = { actionIndex, groupIndex ->
                                 viewModel.toggleGroupCompleted(actionIndex, groupIndex)
                             },
-                            onUpdateGroupWeight = { actionIndex, groupIndex, weight ->
-                                viewModel.updateGroupWeight(actionIndex, groupIndex, weight)
-                            },
-                            onUpdateGroupReps = { actionIndex, groupIndex, reps ->
-                                viewModel.updateGroupReps(actionIndex, groupIndex, reps)
-                            },
                             onAddGroup = { actionIndex ->
                                 viewModel.addGroupToAction(actionIndex)
                             },
@@ -257,12 +260,65 @@ fun PageExecutePlan(
                             onDeleteGroup = { actionIndex, groupIndex ->
                                 viewModel.deleteGroup(actionIndex, groupIndex)
                             },
-                            refreshKey = refreshKey  // ✅ 传入刷新key
+                            refreshKey = refreshKey,  // ✅ 传入刷新key
+                            onEditWeight = { groupIndex, group ->
+                                editingActionIndex = index
+                                editingGroupIndex = groupIndex
+                                editingGroup = group
+                                editingField = 0
+                                showNumberInput = true
+                            },
+                            onEditReps = { groupIndex, group ->
+                                editingActionIndex = index
+                                editingGroupIndex = groupIndex
+                                editingGroup = group
+                                editingField = 1
+                                showNumberInput = true
+                            }
                         )
                     }
                 }
             }
         }
+    }
+
+    // ✅ 数字输入对话框
+    if (showNumberInput && editingGroup != null) {
+        // ✅ 使用本地状态管理输入过程中的临时值
+        var tempInputValue by remember(editingGroup, editingField) {
+            mutableStateOf(
+                if (editingField == 0) editingGroup!!.weight.toString()
+                else editingGroup!!.reps.toString()
+            )
+        }
+
+
+        NumberInputBottomSheet(
+            currentValue = tempInputValue,
+            // ✅ 仅更新本地状态，不触发 ViewModel
+            onValueChange = { newValue ->
+                tempInputValue = newValue
+            },
+
+            // ✅ 只在关闭/确认时，才将最终值写入 ViewModel
+            onDismiss = {
+                // 解析并保存最终值
+                if (editingField == 0) {
+                    val weight = tempInputValue.toDoubleOrNull() ?: editingGroup!!.weight
+                    viewModel.updateGroupWeight(editingActionIndex, editingGroupIndex, weight)
+                } else {
+                    val reps = tempInputValue.toIntOrNull() ?: editingGroup!!.reps
+                    viewModel.updateGroupReps(editingActionIndex, editingGroupIndex, reps)
+                }
+
+                showNumberInput = false
+                editingGroup = null
+                inputPanelHeight = 0.dp
+            },
+            onHeightMeasured = { height ->
+                inputPanelHeight = height
+            }
+        )
     }
 
     // ✅ 倒计时对话框
@@ -368,12 +424,12 @@ fun ExecuteActionCard(
     isExpanded: Boolean,
     refreshKey: Int = 0,
     onToggleGroupCompleted: (Int, Int) -> Unit,
-    onUpdateGroupWeight: (Int, Int, String) -> Unit,
-    onUpdateGroupReps: (Int, Int, String) -> Unit,
     onAddGroup: (Int) -> Unit,
     onCopyGroup: (Int, Int) -> Unit,
     onInsertGroup: (Int, Int) -> Unit,
-    onDeleteGroup: (Int, Int) -> Unit
+    onDeleteGroup: (Int, Int) -> Unit,
+    onEditWeight: (Int, TrainingGroup) -> Unit,   // ✅ 新增
+    onEditReps: (Int, TrainingGroup) -> Unit      // ✅ 新增
 ) {
     var expanded by remember { mutableStateOf(isExpanded) }
 
@@ -512,15 +568,11 @@ fun ExecuteActionCard(
                             onToggleCompleted = {
                                 onToggleGroupCompleted(actionIndex, index)
                             },
-                            onUpdateWeight = { weight ->
-                                onUpdateGroupWeight(actionIndex, index, weight)
-                            },
-                            onUpdateReps = { reps ->
-                                onUpdateGroupReps(actionIndex, index, reps)
-                            },
                             onCopy = { onCopyGroup(actionIndex, index) },
                             onInsert = { onInsertGroup(actionIndex, index) },
-                            onDelete = { onDeleteGroup(actionIndex, index) }
+                            onDelete = { onDeleteGroup(actionIndex, index) },
+                            onEditWeight = { onEditWeight(index, group) },  // ✅ 传递
+                            onEditReps = { onEditReps(index, group) }       // ✅ 传递
                         )
                     }
                 }
@@ -556,20 +608,15 @@ fun ExecuteGroupItem(
     totalGroups: Int,
     isCompleted: Boolean,
     onToggleCompleted: () -> Unit,
-    onUpdateWeight: (String) -> Unit,
-    onUpdateReps: (String) -> Unit,
     onCopy: () -> Unit,
     onInsert: () -> Unit,
     onDelete: () -> Unit,
+    onEditWeight: () -> Unit,   // ✅ 新增
+    onEditReps: () -> Unit      // ✅ 新增
 ) {
-    var weight by remember { mutableStateOf(group.weight.toString()) }
-    var reps by remember { mutableStateOf(group.reps.toString()) }
     var showMenu by remember { mutableStateOf(false) }
-
-    LaunchedEffect(group) {
-        weight = group.weight.toString()
-        reps = group.reps.toString()
-    }
+    val weightNum = group.weight
+    val repsNum = group.reps
 
     val rowBackgroundColor = if (isCompleted) {
         MaterialTheme.colorScheme.primaryContainer
@@ -602,99 +649,55 @@ fun ExecuteGroupItem(
             }
         )
 
-        // ✅ 重量输入 - 固定宽度 80dp
-        OutlinedTextField(
-            value = weight,
-            onValueChange = {
-                weight = it
-                onUpdateWeight(it)
-            },
-            label = null,
-            enabled = true,
+        // ✅ 重量显示 - 点击弹出数字输入
+        Box(
             modifier = Modifier
-                .width(80.dp)  // ✅ 固定宽度 80dp
-                .height(44.dp),
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                lineHeight = 10.sp
-            ),
-            shape = MaterialTheme.shapes.small,
-            placeholder = {
-                Text(
-                    text = "0",
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                .width(80.dp)
+                .height(44.dp)
+                .clickable { onEditWeight() }
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(8.dp)
                 )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = if (isCompleted) {
-                    MaterialTheme.colorScheme.primary
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (weightNum > 0) "${weightNum}kg" else "0",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (weightNum > 0) {
+                    MaterialTheme.colorScheme.onSurface
                 } else {
-                    MaterialTheme.colorScheme.primary
-                },
-                unfocusedBorderColor = if (isCompleted) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                },
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                // ✅ 修复输入框内边距，让文字垂直居中
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
             )
-        )
+        }
 
-        // ✅ 次数输入 - 固定宽度 80dp
-        OutlinedTextField(
-            value = reps,
-            onValueChange = {
-                reps = it
-                onUpdateReps(it)
-            },
-            label = null,
-            enabled = true,
+        // ✅ 次数显示 - 点击弹出数字输入
+        Box(
             modifier = Modifier
-                .width(80.dp)  // ✅ 固定宽度 80dp
-                .height(44.dp),
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                lineHeight = 10.sp
-            ),
-            shape = MaterialTheme.shapes.small,
-            placeholder = {
-                Text(
-                    text = "0",
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                .width(80.dp)
+                .height(44.dp)
+                .clickable { onEditReps() }
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(8.dp)
                 )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = if (isCompleted) {
-                    MaterialTheme.colorScheme.primary
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (repsNum > 0) "${repsNum}次" else "0",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (repsNum > 0) {
+                    MaterialTheme.colorScheme.onSurface
                 } else {
-                    MaterialTheme.colorScheme.primary
-                },
-                unfocusedBorderColor = if (isCompleted) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                },
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                // ✅ 修复输入框内边距，让文字垂直居中
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
             )
-        )
+        }
 
         // 完成按钮
         Button(

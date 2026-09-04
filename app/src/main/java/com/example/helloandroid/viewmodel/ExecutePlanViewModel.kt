@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -218,22 +219,50 @@ class ExecutePlanViewModel(
     // 6. 更新组数据（重量/次数）
     // ============================================================
 
-    fun updateGroupWeight(actionIndex: Int, groupIndex: Int, weight: String) {
-        val session = _session.value ?: return
-        val action = session.actions.getOrNull(actionIndex) ?: return
-        val group = action.groups.getOrNull(groupIndex) ?: return
+//    fun updateGroupWeight(actionIndex: Int, groupIndex: Int, weight: Double) {
+//        val session = _session.value ?: return
+//        val action = session.actions.getOrNull(actionIndex) ?: return
+//        val group = action.groups.getOrNull(groupIndex) ?: return
+//
+//        group.weight = weight
+//        _session.value = session.copy()
+//    }
 
-        group.weight = weight.toDoubleOrNull() ?: 0.0
-        _session.value = session.copy()
+    fun updateGroupWeight(actionIndex: Int, groupIndex: Int, weight: Double) {
+        _session.update { currentSession ->
+            currentSession ?: return@update null
+
+            val updatedActions = currentSession.actions.mapIndexed { aIdx, action ->
+                if (aIdx != actionIndex) return@mapIndexed action
+
+                val updatedGroups = action.groups.mapIndexed { gIdx, group ->
+                    if (gIdx != groupIndex) return@mapIndexed group
+                    group.copy(weight = weight)
+                }.toMutableList()  // ⚠️ 转回 MutableList
+
+                action.copy(groups = updatedGroups)  // ✅ 创建新的 TrainingAction
+            }.toMutableList()
+
+            currentSession.copy(actions = updatedActions)  // ✅ 创建新的 Session
+        }
     }
 
-    fun updateGroupReps(actionIndex: Int, groupIndex: Int, reps: String) {
-        val session = _session.value ?: return
-        val action = session.actions.getOrNull(actionIndex) ?: return
-        val group = action.groups.getOrNull(groupIndex) ?: return
+    fun updateGroupReps(actionIndex: Int, groupIndex: Int, reps: Int) {
+        _session.update { currentSession ->
+            currentSession ?: return@update null
 
-        group.reps = reps.toIntOrNull() ?: 0
-        _session.value = session.copy()
+            val updatedActions = currentSession.actions.mapIndexed { aIdx, action ->
+                if (aIdx != actionIndex) return@mapIndexed action
+
+                val updatedGroups = action.groups.mapIndexed { gIdx, group ->
+                    if (gIdx != groupIndex) return@mapIndexed group
+                    group.copy(reps = reps)  // ✅ 创建新的 TrainingGroup
+                }.toMutableList()
+                action.copy(groups = updatedGroups)  // ✅ 创建新的 TrainingAction
+            }.toMutableList()
+
+            currentSession.copy(actions = updatedActions)  // ✅ 创建新的 Session
+        }
     }
 
     // ============================================================
