@@ -1,0 +1,391 @@
+┌─────────────────┐          ┌─────────────────┐
+│    actions      │          │     plans       │
+│   (动作库表)    │          │   (计划表)      │
+├─────────────────┤          ├─────────────────┤
+│ id (PK)         │          │ id (PK)         │
+│ name            │          │ name            │
+│ category        │          │ createdAt       │
+│ subCategory     │          └────────┬────────┘
+│ isPreset        │                   │
+└────────┬────────┘                   │
+         │                            │
+         │ 1                         │ 1
+         │                            │
+         └──────────┬─────────────────┘
+                    │
+                    │ N
+         ┌──────────▼──────────┐
+         │   plan_actions      │
+         │  (计划动作关联表)    │
+         ├─────────────────────┤
+         │ id (PK)             │
+         │ planId (FK → plans) │
+         │ actionId (FK → actions)│
+         │ sortOrder           │ ← 动作在计划中的顺序
+         └──────────┬──────────┘
+                    │
+                    │ 1
+                    │
+                    │ N
+         ┌──────────▼──────────┐
+         │  action_details      │
+         │   (动作详情表)       │
+         ├─────────────────────┤
+         │ id (PK)             │
+         │ planActionId (FK)   │ ← 关联到 plan_actions
+         │ groupIndex          │ ← 第几组
+         │ weight              │
+         │ reps                │
+         │ weightUnit          │
+         │ restSeconds         │
+         │ isLeftRight         │
+         └─────────────────────┘
+
+         好的，我来帮你实现保存计划到数据库的完整逻辑。需要将 `CreatePlanViewModel` 中的 `PlanAction` 数据转换为数据库实体并保存。
+
+         ---
+
+         ### 📁 保存逻辑涉及的转换
+
+         ```
+         UI 数据 (PlanAction)                   数据库实体
+         ─────────────────────────────────────────────────────────────
+         PlanAction                              PlanActionsEntity
+           ├── actionId          ──────────→    actionId
+           ├── actionName        (只用于显示)   planId (由插入计划后生成)
+           └── groups (List)                    sortOrder (根据索引)
+                                                 ↓
+                                               ActionDetailEntity
+                                                 ├── groupIndex
+                                                 ├── weight
+                                                 ├── reps
+                                                 └── planActionId (由插入关联后生成)
+         ```
+
+         ---
+
+         ### ✅ 1. 在 `CreatePlanViewModel` 中实现保存
+
+         ```kotlin
+         // ui/plan/CreatePlanViewModel.kt
+
+         import androidx.lifecycle.ViewModel
+         import androidx.lifecycle.ViewModelProvider
+         import androidx.lifecycle.viewModelScope
+         import kotlinx.coroutines.flow.MutableStateFlow
+         import kotlinx.coroutines.flow.StateFlow
+         import kotlinx.coroutines.flow.asStateFlow
+         import kotlinx.coroutines.flow.update
+         import kotlinx.coroutines.launch
+         import com.example.helloandroid.entity.PlansEntity
+         import com.example.helloandroid.entity.PlanActionsEntity
+         import com.example.helloandroid.entity.ActionDetailEntity
+
+         class CreatePlanViewModel(
+             private val planRepository: PlanRepository
+         ) : ViewModel() {
+
+             private val _selectedActions = MutableStateFlow<List<PlanAction>>(emptyList())
+             val selectedActions: StateFlow<List<PlanAction>> = _selectedActions.asStateFlow()
+
+             // ✅ 计划名称
+             private val _planName = MutableStateFlow("")
+             val planName: StateFlow<String> = _planName.asStateFlow()
+
+             fun updatePlanName(name: String) {
+                 _planName.value = name
+             }
+
+             // ... 其他方法（addAction, removeAction, addGroup, removeGroup, updateGroupWeight, updateGroupReps）
+
+             // ✅ 保存计划到数据库
+             suspend fun savePlan(): Result<Long> {
+                 return try {
+                     val name = _planName.value.ifBlank { "未命名计划" }
+                     val actions = _selectedActions.value
+
+                     if (actions.isEmpty()) {
+                         return Result.failure(IllegalStateException("请至少添加一个动作"))
+                     }
+
+                     // 1. 插入计划
+                     val planId = planRepository.insertPlan(name)
+
+                     // 2. 插入每个动作及其组详情
+                     actions.forEachIndexed { index, planAction ->
+                         // 插入 plan_action
+                         val planActionId = planRepository.insertPlanAction(
+                             PlanActionsEntity(
+                                 planId = planId,
+                                 actionId = planAction.actionId,
+                                 sortOrder = index
+                             )
+                         )
+
+                         // 插入该动作的所有组详情
+                         planAction.groups.forEachIndexed { groupIndex, group ->
+                             val weight = group.weight.toDoubleOrNull() ?: 0.0
+                             val reps = group.reps.toLongOrNull() ?: 0L
+
+                             planRepository.insertActionDetail(
+                                 ActionDetailEntity(
+                                     planActionId = planActionId,
+                                     groupIndex = groupIndex.toLong(),
+                                     weight = weight,
+                                     reps = reps,
+                                     weightUnit = "kg",
+                                     restSeconds = 60,
+                                     isLeftRight = false
+                                 )
+                             )
+                         }
+                     }
+
+                     // 保存成功后清空状态
+                     _selectedActions.value = emptyList()
+                     _planName.value = ""
+
+                     Result.success(planId)
+                 } catch (e: Exception) {
+                     Result.failure(e)
+                 }
+             }
+
+             companion object {
+                 val factory = object : ViewModelProvider.Factory {
+                     @Suppress("UNCHECKED_CAST")
+                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                         return CreatePlanViewModel(
+                             PlanRepository(
+                                 FitApplication.instance.database.planDao(),
+                                 FitApplication.instance.database.planActionsDao(),
+                                 FitApplication.instance.database.actionDetailsDao(),
+                                 FitApplication.instance.database.planFullDao()
+                             )
+                         ) as T
+                     }
+                 }
+             }
+         }
+         ```
+
+         ---
+
+         ### ✅ 2. 创建 `PlanRepository`
+
+         ```kotlin
+         // repository/PlanRepository.kt
+
+         import androidx.room.Transaction
+         import com.example.helloandroid.entity.PlansEntity
+         import com.example.helloandroid.entity.PlanActionsEntity
+         import com.example.helloandroid.entity.ActionDetailEntity
+         import com.example.helloandroid.dao.PlansDao
+         import com.example.helloandroid.dao.PlanActionsDao
+         import com.example.helloandroid.dao.ActionDetailsDao
+         import com.example.helloandroid.dao.PlanFullDao
+         import kotlinx.coroutines.flow.Flow
+
+         class PlanRepository(
+             private val plansDao: PlansDao,
+             private val planActionsDao: PlanActionsDao,
+             private val actionDetailsDao: ActionDetailsDao,
+             private val planFullDao: PlanFullDao
+         ) {
+
+             // ========== 插入 ==========
+             suspend fun insertPlan(name: String): Long {
+                 return plansDao.insert(PlansEntity(name = name))
+             }
+
+             suspend fun insertPlanAction(planAction: PlanActionsEntity): Long {
+                 return planActionsDao.insert(planAction)
+             }
+
+             suspend fun insertActionDetail(detail: ActionDetailEntity): Long {
+                 return actionDetailsDao.insert(detail)
+             }
+
+             // ========== 查询 ==========
+             fun getAllPlans(): Flow<List<PlansEntity>> {
+                 return plansDao.getAllPlans()
+             }
+
+             suspend fun getPlanWithActions(planId: Long): PlanWithActionsAndDetails? {
+                 return planFullDao.getPlanWithActions(planId)
+             }
+
+             // ========== 删除 ==========
+             suspend fun deletePlan(plan: PlansEntity) {
+                 plansDao.delete(plan)  // CASCADE 自动删除关联数据
+             }
+
+             suspend fun deletePlanById(planId: Long) {
+                 plansDao.deleteById(planId)
+             }
+         }
+         ```
+
+         ---
+
+         ### ✅ 3. 更新 `PageCreatePlan` 中的保存按钮
+
+         ```kotlin
+         // ui/plan/PageCreatePlan.kt (更新保存按钮部分)
+
+         @OptIn(ExperimentalMaterial3Api::class)
+         @Composable
+         fun PageCreatePlan(
+             navController: NavHostController,
+             viewModel: CreatePlanViewModel = viewModel(factory = CreatePlanViewModel.factory)
+         ) {
+             val selectedActions by viewModel.selectedActions.collectAsStateWithLifecycle()
+             val planName by viewModel.planName.collectAsStateWithLifecycle()
+
+             // ✅ 保存状态
+             var isSaving by remember { mutableStateOf(false) }
+             var showSaveError by remember { mutableStateOf(false) }
+             var errorMessage by remember { mutableStateOf("") }
+             val coroutineScope = rememberCoroutineScope()
+
+             // ... 其他代码
+
+             Scaffold(
+                 topBar = {
+                     TopAppBar(
+                         title = {
+                             // ✅ 计划名称输入框（点击保存时使用）
+                             OutlinedTextField(
+                                 value = planName,
+                                 onValueChange = viewModel::updatePlanName,
+                                 label = { Text("计划名称") },
+                                 modifier = Modifier.fillMaxWidth(),
+                                 singleLine = true,
+                                 textStyle = MaterialTheme.typography.titleMedium
+                             )
+                         },
+                         navigationIcon = {
+                             IconButton(
+                                 onClick = {
+                                     if (selectedActions.isNotEmpty()) {
+                                         // TODO: 显示确认放弃对话框
+                                     }
+                                     navController.popBackStack()
+                                 }
+                             ) {
+                                 Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                             }
+                         },
+                         actions = {
+                             Button(
+                                 onClick = {
+                                     coroutineScope.launch {
+                                         isSaving = true
+                                         val result = viewModel.savePlan()
+                                         isSaving = false
+                                         result.fold(
+                                             onSuccess = { planId ->
+                                                 // ✅ 保存成功，返回上一页
+                                                 navController.popBackStack()
+                                             },
+                                             onFailure = { error ->
+                                                 errorMessage = error.message ?: "保存失败"
+                                                 showSaveError = true
+                                             }
+                                         )
+                                     }
+                                 },
+                                 enabled = selectedActions.isNotEmpty() && !isSaving
+                             ) {
+                                 if (isSaving) {
+                                     Text("保存中...")
+                                 } else {
+                                     Text("保存")
+                                 }
+                             }
+                         },
+                         colors = TopAppBarDefaults.topAppBarColors(
+                             containerColor = MaterialTheme.colorScheme.primaryContainer,
+                             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                         )
+                     )
+                 }
+             ) { paddingValues ->
+                 // ... 页面内容
+             }
+
+             // ✅ 错误提示对话框
+             if (showSaveError) {
+                 AlertDialog(
+                     onDismissRequest = { showSaveError = false },
+                     title = { Text("保存失败") },
+                     text = { Text(errorMessage) },
+                     confirmButton = {
+                         TextButton(onClick = { showSaveError = false }) {
+                             Text("确定")
+                         }
+                     }
+                 )
+             }
+         }
+         ```
+
+         ---
+
+         ### ✅ 4. DAO 中需要的插入方法
+
+         确保你的 DAO 中有这些方法：
+
+         ```kotlin
+         // dao/PlansDao.kt
+         @Insert(onConflict = OnConflictStrategy.REPLACE)
+         suspend fun insert(plan: PlansEntity): Long
+
+         // dao/PlanActionsDao.kt
+         @Insert(onConflict = OnConflictStrategy.REPLACE)
+         suspend fun insert(planAction: PlanActionsEntity): Long
+
+         // dao/ActionDetailsDao.kt
+         @Insert(onConflict = OnConflictStrategy.REPLACE)
+         suspend fun insert(detail: ActionDetailEntity): Long
+         ```
+
+         ---
+
+         ### 📋 保存流程总结
+
+         ```
+         用户点击「保存」
+                 │
+                 ▼
+         ┌───────────────────────────────────────┐
+         │ 1. 检查是否有动作                      │
+         │    └─ 空 → 提示错误                   │
+         │                                       │
+         │ 2. 插入 plans 表                      │
+         │    └─ 返回 planId                    │
+         │                                       │
+         │ 3. 遍历每个动作                       │
+         │    ├─ 插入 plan_actions 表           │
+         │    │   └─ 返回 planActionId         │
+         │    └─ 遍历该动作的所有组             │
+         │        └─ 插入 action_details 表     │
+         │                                       │
+         │ 4. 清空状态，返回上一页               │
+         └───────────────────────────────────────┘
+         ```
+
+         ---
+
+         ### 📊 数据流向
+
+         | UI 数据 | 数据库表 | 说明 |
+         |---------|---------|------|
+         | `planName` | `plans.name` | 计划名称 |
+         | `PlanAction.actionId` | `plan_actions.actionId` | 关联动作 |
+         | `PlanAction.groups[index]` | `plan_actions.sortOrder` | 动作在计划中的顺序 |
+         | `ActionGroup.weight` | `action_details.weight` | 重量 |
+         | `ActionGroup.reps` | `action_details.reps` | 次数 |
+         | `ActionGroup.groupIndex` | `action_details.groupIndex` | 组号 |
+
+         这样保存计划的功能就完整实现了。😊
