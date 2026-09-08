@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_timer_overlay"
+    android:padding="12dp"
+    android:elevation="8dp">
+
+    <!-- 总时间 -->
+    <TextView
+        android:id="@+id/tv_overlay_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center" />
+
+    <!-- 倒计时（组间歇） -->
+    <TextView
+        android:id="@+id/tv_overlay_rest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⏱️ 00:30"
+        android:textColor="@android:color/holo_orange_light"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:visibility="gone" />
+
+</LinearLayout>

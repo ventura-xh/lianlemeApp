@@ -36,6 +36,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -46,6 +48,7 @@ import com.example.helloandroid.navigation.AppNavGraph
 import com.example.helloandroid.navigation.BottomNavScreen
 import com.example.helloandroid.navigation.Screen
 import com.example.helloandroid.navigation.bottomNavItems
+import com.example.helloandroid.service.TrainingTimerService
 import com.example.helloandroid.ui.theme.HelloAndroidTheme
 import com.example.helloandroid.viewmodel.MainViewModel
 
@@ -55,6 +58,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // ✅ 监听应用前后台切换
+        setupAppLifecycleObserver()
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -85,6 +91,24 @@ class MainActivity : ComponentActivity() {
                 route == BottomNavScreen.ActionLib.route ||
                 route == BottomNavScreen.Calendar.route ||
                 route == BottomNavScreen.Profile.route
+    }
+
+    private fun setupAppLifecycleObserver() {
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                super.onStart(owner)
+                // ✅ App 回到前台
+                TrainingTimerService.isAppInForeground = true
+                TrainingTimerService.hideOverlayIfNeeded(this@MainActivity)
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                super.onStop(owner)
+                // ✅ App 进入后台
+                TrainingTimerService.isAppInForeground = false
+                TrainingTimerService.showOverlayIfNeeded(this@MainActivity)
+            }
+        })
     }
 }
 

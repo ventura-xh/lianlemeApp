@@ -1,5 +1,6 @@
 package com.example.helloandroid.ui.exercise
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -56,18 +58,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.helloandroid.entity.model.TrainingAction
 import com.example.helloandroid.entity.model.TrainingGroup
 import com.example.helloandroid.navigation.Screen
+import com.example.helloandroid.service.TrainingTimerService
 import com.example.helloandroid.ui.common.NumberInputBottomSheet
 import com.example.helloandroid.viewmodel.ExecutePlanViewModel
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,6 +143,26 @@ fun PageExecutePlan(
     // 训练结果id
     val savedSessionId by viewModel.savedSessionId.collectAsStateWithLifecycle()
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
+
+    // ✅ 返回前台时刷新时间
+    DisposableEffect(Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // 从服务同步最新时间
+                val latestTime = TrainingTimerService.getCurrentElapsedTime()
+                Log.d("TimerSync", "返回前台，同步时间: $latestTime")
+                viewModel.syncElapsedTime(latestTime)
+                Log.d("TimerSync", "扫描时间: $latestTime")
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     // ✅ 如果 session 中有计划名称，更新显示
     LaunchedEffect(session) {
         session?.let {
@@ -163,13 +191,14 @@ fun PageExecutePlan(
     Scaffold(
         topBar = {
             ExecuteTopAppBar(
-                elapsedTime = elapsedTime,
+                elapsedTime = viewModel.elapsedTime.collectAsState().value,
                 planName = finalPlanName,
                 onFinish = {
                     viewModel.finishSession()
                 },
                 onBack = {
                     // TODO: 显示确认退出对话框
+                    viewModel.cancelSession()
                     navController.popBackStack()
                 }
             )
