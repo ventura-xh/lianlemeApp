@@ -346,11 +346,13 @@ class ExecutePlanViewModel(
         _remainingSeconds.value = seconds
         _showRestDialog.value = true
         _showRestFloating.value = false
-        startRestCountdown()
 
         // 发送到服务
         val context = getApplication<Application>().applicationContext
+        TrainingTimerService.updateRestTime(seconds)
         TrainingTimerService.startRest(context, seconds)
+
+        startRestCountdown()
     }
 
     private fun startRestCountdown() {
@@ -372,6 +374,9 @@ class ExecutePlanViewModel(
         val newRemaining = (_remainingSeconds.value + delta).coerceIn(0, newTotal)
         _remainingSeconds.value = newRemaining
         defaultRestSeconds = newTotal
+
+        val context = getApplication<Application>().applicationContext
+        TrainingTimerService.updateRestTime(newRemaining)
     }
 
     fun minimizeRestDialog() {

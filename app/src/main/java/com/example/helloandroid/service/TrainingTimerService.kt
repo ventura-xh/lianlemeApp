@@ -162,6 +162,10 @@ class TrainingTimerService : Service() {
             return _restTime.value ?: 0
         }
 
+        fun updateRestTime(seconds: Int) {
+            _restTime.postValue(seconds)
+        }
+
         // ✅ 更新悬浮窗时间（外部调用）
         fun updateOverlayTime(context: Context, time: Long) {
             context.startService(Intent(context, TrainingTimerService::class.java).apply {
@@ -268,16 +272,19 @@ class TrainingTimerService : Service() {
     private fun startRestTimer(seconds: Int) {
         if (isRestRunning) return
         isRestRunning = true
+
         _restTime.postValue(seconds)
 
         restJob = serviceScope.launch {
             var remaining = seconds
             while (isRestRunning && remaining > 0) {
-                delay(1000L)
+                delay(1000L.milliseconds)
                 remaining--
                 _restTime.postValue(remaining)
                 mainHandler.post {
-                    updateOverlayRestTime(formatTime(remaining.toLong()))
+                    if (isOverlayShowing) {
+                        updateOverlayRestTime(formatTime(remaining.toLong()))
+                    }
                 }
             }
             // 倒计时结束
