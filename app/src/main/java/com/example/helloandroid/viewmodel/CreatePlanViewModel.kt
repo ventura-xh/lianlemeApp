@@ -201,10 +201,12 @@ class CreatePlanViewModel(
                         FitApplication.instance.database.plansDao(),
                         FitApplication.instance.database.planActionsDao(),
                         FitApplication.instance.database.actionDetailsDao(),
-                        FitApplication.instance.database.planFullDao()
+                        FitApplication.instance.database.planFullDao(),
+                        FitApplication.instance.database.actionLibDAO(),
+                        FitApplication.instance.database.muscleDao()
                     ),
                     ActionLibRepository(
-                        FitApplication.instance.database.actionDao(),
+                        FitApplication.instance.database.actionLibDAO(),
                         FitApplication.instance.database.muscleDao(),
                         FitApplication.instance.database.actionMuscleDao()
                     )

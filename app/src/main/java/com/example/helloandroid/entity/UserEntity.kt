@@ -10,6 +10,7 @@ data class UserEntity(
     val nickname: String = "健身爱好者",
     val uid: String = "",  // 用户唯一标识
     val avatar: String? = null,  // 头像路径（可选）
+    val city: String = "",  // ✅ 新增城市
 
     // ✅ 身体数据
     val weight: Double = 0.0,  // 体重 (kg)

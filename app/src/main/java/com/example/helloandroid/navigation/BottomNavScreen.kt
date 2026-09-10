@@ -80,7 +80,14 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
         route = "settings",
         hideBottomBar = true
     )
-
+    data object UserProfile : Screen(
+        route = "user_profile",
+        hideBottomBar = true
+    )
+    data object EditProfile : Screen(
+        route = "edit_profile",
+        hideBottomBar = true
+    )
     // -----------------------------------------------------------------------------------------
     // ✅ 获取路由前缀（用于匹配带参数的路径）
     fun getRoutePrefix(): String {
@@ -99,6 +106,7 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
             ExercisePrepare,
             EditPlan,
             TrainingResult,
+            MonthlyReport,
             Statistics  // ✅ 确保添加了 Statistics
         )
 

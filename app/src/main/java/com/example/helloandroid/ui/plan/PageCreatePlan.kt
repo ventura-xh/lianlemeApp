@@ -88,7 +88,7 @@ fun PageCreatePlan(
                 @Suppress("UNCHECKED_CAST")
                 return ActionLibViewModel(
                     ActionLibRepository(
-                        FitApplication.instance.database.actionDao(),
+                        FitApplication.instance.database.actionLibDAO(),
                         FitApplication.instance.database.muscleDao(),
                         FitApplication.instance.database.actionMuscleDao()
                     )

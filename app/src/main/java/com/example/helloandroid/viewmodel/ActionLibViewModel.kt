@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.helloandroid.FitApplication
-import com.example.helloandroid.dao.ActionLibDAO
 import com.example.helloandroid.entity.ActionLibEntity
 import com.example.helloandroid.entity.MuscleEntity
 import com.example.helloandroid.repository.ActionLibRepository
@@ -215,7 +214,7 @@ class ActionLibViewModel(
                 val database = FitApplication.instance.database
                 return ActionLibViewModel(
                     ActionLibRepository(
-                        actionLibDAO = database.actionDao(),
+                        actionLibDAO = database.actionLibDAO(),
                         muscleDao = database.muscleDao(),
                         actionMuscleDao = database.actionMuscleDao()
                     )

@@ -245,10 +245,12 @@ class EditPlanViewModel(
                             database.plansDao(),
                             database.planActionsDao(),
                             database.actionDetailsDao(),
-                            database.planFullDao()
+                            database.planFullDao(),
+                            database.actionLibDAO(),
+                            database.muscleDao()
                         ),
                         actionLibRepository = ActionLibRepository(
-                            database.actionDao(),
+                            database.actionLibDAO(),
                             database.muscleDao(),
                             database.actionMuscleDao()
                         )

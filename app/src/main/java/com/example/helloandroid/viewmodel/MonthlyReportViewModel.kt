@@ -5,6 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.helloandroid.FitApplication
 import com.example.helloandroid.entity.TrainingSessionEntity
+import com.example.helloandroid.entity.model.DaySessionData
+import com.example.helloandroid.entity.model.MonthlyReportData
+import com.example.helloandroid.entity.model.MuscleStat
+import com.example.helloandroid.entity.model.WeeklyData
 import com.example.helloandroid.entity.model.formatDate
 import com.example.helloandroid.repository.PlanRepository
 import com.example.helloandroid.repository.TrainingRepository
@@ -15,37 +19,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-
-// ✅ 月报数据
-data class MonthlyReportData(
-    val monthLabel: String,
-    val totalSessions: Int,
-    val totalDuration: Long,
-    val totalActions: Int,
-    val totalGroups: Int,
-    val weeklyData: List<WeeklyData>,
-    val muscleStats: List<MuscleStat>,
-    val dailySessions: List<DaySessionData>
-)
-
-// ✅ 每周数据
-data class WeeklyData(
-    val weekIndex: Int,
-    val count: Int
-)
-
-// ✅ 肌肉统计
-data class MuscleStat(
-    val muscleName: String,
-    val count: Int,
-    val percentage: Float
-)
-
-// ✅ 每日训练数据
-data class DaySessionData(
-    val date: String,
-    val sessions: List<TrainingSessionEntity>
-)
 
 class MonthlyReportViewModel(
     private val trainingRepository: TrainingRepository
@@ -71,7 +44,7 @@ class MonthlyReportViewModel(
         }
     }
 
-    private fun generateMonthlyReport(allSessions: List<TrainingSessionEntity>): MonthlyReportData {
+    private suspend fun generateMonthlyReport(allSessions: List<TrainingSessionEntity>): MonthlyReportData {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
@@ -92,21 +65,53 @@ class MonthlyReportViewModel(
         var totalActions = 0
         var totalGroups = 0
 
-        // TODO: 统计动作和组数（需要从数据库查询）
-        // 这里先使用示例数据
+        // ✅ 肌肉统计 Map<肌肉名称, 次数>
+        val muscleCountMap = mutableMapOf<String, Int>()
+
+        // ✅ 遍历所有训练会话，统计动作和肌肉
+        monthSessions.forEach { session ->
+            try {
+                // 获取训练详情
+                val sessionDetail = trainingRepository.getSessionWithDetails(session.id)
+                sessionDetail?.let { detail ->
+                    detail.actions.forEach { actionWithDetails ->
+                        totalActions++
+                        totalGroups += actionWithDetails.details.size
+
+                        // ✅ 获取该动作关联的肌肉
+                        val muscleNames = trainingRepository.getMuscleNamesForAction(
+                            actionWithDetails.action.actionId
+                        )
+                        muscleNames.forEach { muscleName ->
+                            muscleCountMap[muscleName] =
+                                (muscleCountMap[muscleName] ?: 0) + 1
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        // ✅ 计算肌肉统计百分比
+        val totalMuscleCount = muscleCountMap.values.sum().toFloat()
+        val muscleStats = muscleCountMap
+            .map { (name, count) ->
+                MuscleStat(
+                    muscleName = name,
+                    count = count,
+                    percentage = if (totalMuscleCount > 0) {
+                        count / totalMuscleCount * 100
+                    } else {
+                        0f
+                    }
+                )
+            }
+            .sortedByDescending { it.count }
+            .take(10)  // 只显示前10个
 
         // 每周数据
         val weeklyData = generateWeeklyData(monthSessions)
-
-        // 肌肉统计（示例数据）
-        val muscleStats = listOf(
-            MuscleStat("胸大肌", 12, 25f),
-            MuscleStat("背阔肌", 10, 21f),
-            MuscleStat("股四头肌", 8, 17f),
-            MuscleStat("臀大肌", 6, 13f),
-            MuscleStat("三角肌", 6, 13f),
-            MuscleStat("肱二头肌", 5, 11f)
-        )
 
         // 每日训练
         val dailySessions = monthSessions
@@ -152,7 +157,9 @@ class MonthlyReportViewModel(
                             database.plansDao(),
                             database.planActionsDao(),
                             database.actionDetailsDao(),
-                            database.planFullDao()
+                            database.planFullDao(),
+                            database.actionLibDAO(),
+                            database.muscleDao()
                         )
                     )
                 ) as T

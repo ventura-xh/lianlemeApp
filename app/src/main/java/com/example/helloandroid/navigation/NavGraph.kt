@@ -17,17 +17,18 @@ import com.example.helloandroid.ui.calendar.PageCalendar
 import com.example.helloandroid.ui.calendar.PageMonthlyReport
 import com.example.helloandroid.ui.calendar.PageStatistics
 import com.example.helloandroid.ui.exercise.PageExecutePlan
-import com.example.helloandroid.ui.exercise.PageExercise
 import com.example.helloandroid.ui.exercise.PageExercisePrepare
 import com.example.helloandroid.ui.exercise.PageTrainingResult
 import com.example.helloandroid.ui.plan.PageCreatePlan
 import com.example.helloandroid.ui.plan.PageEditPlan
-import com.example.helloandroid.ui.profile.PageProfile
 import com.example.helloandroid.ui.plan.PageTrainingPlan
 import com.example.helloandroid.ui.profile.PageBodyData
 import com.example.helloandroid.ui.profile.PageBodyFatCalculator
+import com.example.helloandroid.ui.profile.PageEditProfile
+import com.example.helloandroid.ui.profile.PageProfile
 import com.example.helloandroid.ui.profile.PageRmCalculator
 import com.example.helloandroid.ui.profile.PageSettings
+import com.example.helloandroid.ui.profile.PageUserProfile
 
 @Composable
 fun AppNavGraph(
@@ -148,5 +149,7 @@ fun AppNavGraph(
         composable(Screen.RmCalculator.route) { PageRmCalculator(navController = navController) }
         composable(Screen.Settings.route) { PageSettings(navController = navController) }
         composable(Screen.BodyFatCalculator.route) { PageBodyFatCalculator(navController = navController) }
+        composable(Screen.UserProfile.route) { PageUserProfile(navController = navController) }
+        composable(Screen.EditProfile.route) { PageEditProfile(navController = navController) }
     }
 }

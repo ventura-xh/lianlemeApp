@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.helloandroid.dao.ActionDetailDao
 import com.example.helloandroid.dao.ActionLibDAO
 import com.example.helloandroid.dao.ActionMuscleDao
@@ -40,11 +42,11 @@ import kotlin.concurrent.Volatile
         ActionMuscleEntity::class,
         UserEntity::class
     ],
-    version = 8,  // 20260828, 使用json预载数据
+    version = 9,  // 20260910,完善用户数据信息
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun actionDao(): ActionLibDAO
+    abstract fun actionLibDAO(): ActionLibDAO
     abstract fun plansDao(): PlansDao
     abstract fun planActionsDao(): PlanActionsDao
     abstract fun actionDetailsDao(): ActionDetailDao
@@ -59,14 +61,25 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        // ✅ 从版本 4 迁移到 5
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 添加 city 字段，默认值为空字符串
+                db.execSQL(
+                    "ALTER TABLE users ADD COLUMN city TEXT NOT NULL DEFAULT ''"
+                )
+            }
+        }
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "app_database.db"
-                ).fallbackToDestructiveMigration(true)
-                    .build()
+                )
+                .addMigrations(MIGRATION_8_9)
+//                .fallbackToDestructiveMigration(true)
+                .build()
                 INSTANCE = instance
                 instance
             }

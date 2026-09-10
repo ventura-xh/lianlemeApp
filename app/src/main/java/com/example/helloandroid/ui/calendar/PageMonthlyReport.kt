@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -43,10 +44,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.helloandroid.entity.TrainingSessionEntity
+import com.example.helloandroid.entity.model.MuscleStat
+import com.example.helloandroid.entity.model.WeeklyData
 import com.example.helloandroid.entity.model.formatDuration
 import com.example.helloandroid.viewmodel.MonthlyReportViewModel
-import com.example.helloandroid.viewmodel.MuscleStat
-import com.example.helloandroid.viewmodel.WeeklyData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +69,7 @@ fun PageMonthlyReport(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "📊 月报",
+                        text = reportData?.monthLabel?.let { "$it 月报" } ?: "月报",
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -119,18 +120,9 @@ fun PageMonthlyReport(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
             ) {
-                // ✅ 月份标题
-                item {
-                    Text(
-                        text = reportData!!.monthLabel,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-
                 // ✅ 统计概览卡片
                 item {
                     StatisticsOverviewCard(
@@ -191,7 +183,7 @@ fun StatisticsOverviewCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Row(
@@ -201,22 +193,18 @@ fun StatisticsOverviewCard(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             StatItem(
-                icon = Icons.Default.FitnessCenter,
                 value = "$totalSessions",
                 label = "训练次数"
             )
             StatItem(
-                icon = Icons.Default.Timer,
                 value = formatDuration(totalDuration),
                 label = "总时长"
             )
             StatItem(
-                icon = Icons.Default.FitnessCenter,
                 value = "$totalActions",
                 label = "总动作"
             )
             StatItem(
-                icon = Icons.Default.FitnessCenter,
                 value = "$totalGroups",
                 label = "总组数"
             )
@@ -227,7 +215,6 @@ fun StatisticsOverviewCard(
 // ✅ 统计项
 @Composable
 fun StatItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
     value: String,
     label: String
 ) {
@@ -235,12 +222,6 @@ fun StatItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
         Text(
             text = value,
             fontSize = 18.sp,
@@ -364,12 +345,28 @@ fun MuscleDistributionCard(
             )
 
             if (muscleStats.isEmpty()) {
-                Text(
-                    text = "暂无肌肉数据",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "暂无肌肉数据",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             } else {
+                // ✅ 显示总次数
+                val totalCount = muscleStats.sumOf { it.count }
+                Text(
+                    text = "共 $totalCount 次训练",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
                 muscleStats.forEach { stat ->
                     MuscleStatRow(
                         muscleName = stat.muscleName,

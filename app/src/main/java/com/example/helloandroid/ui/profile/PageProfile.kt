@@ -29,7 +29,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,20 +38,25 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.helloandroid.entity.UserEntity
 import com.example.helloandroid.navigation.Screen
+import com.example.helloandroid.viewmodel.ProfileViewModel
 
 @Composable
 fun PageProfile(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModel.factory
+    )
 ) {
-    // 模拟用户数据
-    val user = remember{
-        User(
-            nickname = "用户昵称",
-            uid = "UID_20240820_001",
-            avatar = null
-        )
+    val user by viewModel.user.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadUser()
     }
 
     Scaffold { paddingValues ->
@@ -61,7 +67,24 @@ fun PageProfile(
         ) {
             // ✅ 用户信息头部（直接显示，无标题）
             item {
-                UserProfileHeader(user = user)
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("加载中...")
+                    }
+                } else {
+                    UserProfileHeader(
+                        user = user,
+                        onClick = {
+                            // ✅ 跳转到个人主页
+                            navController.navigate(Screen.UserProfile.route)
+                        }
+                    )
+                }
             }
 
             // 分割线
@@ -126,20 +149,17 @@ fun PageProfile(
     }
 }
 
-// ✅ 用户数据类
-data class User(
-    val nickname: String,
-    val uid: String,
-    val avatar: String? = null
-)
-
 // ✅ 用户信息头部
 @Composable
-fun UserProfileHeader(user: User) {
+fun UserProfileHeader(
+    user: UserEntity?,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -168,19 +188,28 @@ fun UserProfileHeader(user: User) {
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = user.nickname,
+                    text = user?.nickname ?: "用户昵称",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = user.uid,
+                    text = when (user?.gender) {
+                        1 -> "♂️"
+                        2 -> "♀️"
+                        else -> "❓"
+                    },
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            Text(
+                text = "›",
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

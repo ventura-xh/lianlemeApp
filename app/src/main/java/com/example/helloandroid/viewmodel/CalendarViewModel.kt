@@ -50,7 +50,9 @@ class CalendarViewModel(
                             database.plansDao(),
                             database.planActionsDao(),
                             database.actionDetailsDao(),
-                            database.planFullDao()
+                            database.planFullDao(),
+                            database.actionLibDAO(),
+                            database.muscleDao()
                         )
                     )
                 ) as T

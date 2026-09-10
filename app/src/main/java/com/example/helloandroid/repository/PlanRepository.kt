@@ -3,6 +3,8 @@ package com.example.helloandroid.repository
 // repository/PlanRepository.kt
 
 import com.example.helloandroid.dao.ActionDetailDao
+import com.example.helloandroid.dao.ActionLibDAO
+import com.example.helloandroid.dao.MuscleDao
 import com.example.helloandroid.dao.PlanActionsDao
 import com.example.helloandroid.dao.PlanFullDao
 import com.example.helloandroid.dao.PlansDao
@@ -18,7 +20,9 @@ class PlanRepository(
     private val plansDao: PlansDao,
     private val planActionsDao: PlanActionsDao,
     private val actionDetailsDao: ActionDetailDao,
-    private val planFullDao: PlanFullDao
+    private val planFullDao: PlanFullDao,
+    private val actionLibDAO: ActionLibDAO,  // ✅ 新增
+    private val muscleDao: MuscleDao          // ✅ 新增
 ) {
 
     // ========== 插入 ==========
@@ -101,6 +105,20 @@ class PlanRepository(
             plan = plan,
             actions = actions
         )
+    }
+
+    /**
+     * 获取动作关联的肌肉名称列表
+     */
+    suspend fun getMuscleNamesForAction(actionId: Long): List<String> {
+        return try {
+            val muscleIds = actionLibDAO.getMuscleIdsForAction(actionId)
+            if (muscleIds.isEmpty()) return emptyList()
+            val muscles = muscleDao.getMusclesByIds(muscleIds)
+            muscles.map { it.name }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     // ========== 更新 ==========

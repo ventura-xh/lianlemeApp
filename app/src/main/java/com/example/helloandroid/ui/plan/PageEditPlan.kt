@@ -31,7 +31,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -96,7 +95,7 @@ fun PageEditPlan(
                 @Suppress("UNCHECKED_CAST")
                 return ActionLibViewModel(
                     ActionLibRepository(
-                        FitApplication.instance.database.actionDao(),
+                        FitApplication.instance.database.actionLibDAO(),
                         FitApplication.instance.database.muscleDao(),
                         FitApplication.instance.database.actionMuscleDao()
                     )

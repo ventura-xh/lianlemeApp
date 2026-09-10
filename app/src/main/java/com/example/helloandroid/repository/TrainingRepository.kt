@@ -155,4 +155,17 @@ class TrainingRepository(
     suspend fun getActiveSession(): TrainingSessionEntity? {
         return sessionDao.getActiveSession()
     }
+
+    /**
+     * 获取动作关联的肌肉名称列表
+     * 通过 ActionLibDAO 和 MuscleDao 查询
+     */
+    suspend fun getMuscleNamesForAction(actionId: Long): List<String> {
+        return try {
+            // 通过 PlanRepository 的 actionLibRepository 获取
+            planRepository.getMuscleNamesForAction(actionId)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }
