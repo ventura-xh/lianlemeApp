@@ -24,8 +24,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,25 +40,43 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
+import com.example.helloandroid.FitApplication
+import com.example.helloandroid.entity.TrainingSessionActionDetailEntity
+import com.example.helloandroid.entity.TrainingSessionActionEntity
 import com.example.helloandroid.entity.TrainingSessionEntity
+import com.example.helloandroid.entity.model.TrainingSessionWithDetails
 import com.example.helloandroid.entity.model.formatDate
 import com.example.helloandroid.entity.model.formatDuration
 import com.example.helloandroid.navigation.Screen
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 @Composable
 fun DayTrainingBottomSheet(
     sessions: List<TrainingSessionEntity>,
     currentIndex: Int,
     onDismiss: () -> Unit,
-    navController: NavHostController  // ✅ 添加 navController
+    navController: NavHostController
 ) {
     var index by remember { mutableStateOf(currentIndex) }
     val totalSessions = sessions.size
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
-    val sheetHeight = screenHeight * 2 / 3  // ✅ 三分之二屏幕高度
+    val sheetHeight = screenHeight * 2 / 3
+
+    // ✅ 当前选中的训练详情
+    var sessionDetail by remember { mutableStateOf<TrainingSessionWithDetails?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // ✅ 获取当前选中的 session
+    val currentSession = sessions.getOrNull(index)
+
+    // ✅ 加载训练详情
+    LaunchedEffect(currentSession?.id) {
+        currentSession?.let {
+            isLoading = true
+            sessionDetail = getSessionDetail(it.id)
+            isLoading = false
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -64,14 +85,12 @@ fun DayTrainingBottomSheet(
             decorFitsSystemWindows = false
         )
     ) {
-        // ✅ 遮罩层
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.1f))
                 .clickable { onDismiss() }
         ) {
-            // ✅ 底部弹窗
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,161 +126,164 @@ fun DayTrainingBottomSheet(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // ✅ 中间：训练记录内容
-                    if (sessions.isNotEmpty()) {
+                    if (isLoading) {
                         Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("加载中...")
+                        }
+                    } else if (sessionDetail == null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("暂无数据")
+                        }
+                    } else {
+                        // ✅ 训练信息
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
                         ) {
-                            // 当前选中的训练记录
-                            val currentSession = sessions[index]
-
-                            Column(
-                                modifier = Modifier.fillMaxSize()
+                            // 训练名称和状态
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                // 训练名称和状态
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = currentSession.planName,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = if (currentSession.status == 1) "✅ 已完成" else "❌ 已取消",
-                                        fontSize = 14.sp,
-                                        color = if (currentSession.status == 1) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.error
-                                        }
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                // 时间和时长
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Text(
-                                        text = "⏱️ ${formatDuration(currentSession.totalDuration)}",
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "🏋️ 动作: ${getActionCount(currentSession.id)}",
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                // 分割线
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(1.dp)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                // 动作列表（预览）
                                 Text(
-                                    text = "动作列表",
+                                    text = sessionDetail!!.session.planName,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = if (sessionDetail!!.session.status == 1) "✅ 已完成" else "❌ 已取消",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    color = if (sessionDetail!!.session.status == 1) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.error
+                                    }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // 时间和时长
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "⏱️ ${formatDuration(sessionDetail!!.session.totalDuration)}",
+                                    fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                // 这里可以显示该训练的动作列表
-                                // 简单显示组数信息
-                                TrainingSessionPreview(
-                                    sessionId = currentSession.id
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // ✅ 底部：左右切换 + 页码
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // 左箭头
-                            IconButton(
-                                onClick = {
-                                    if (index > 0) {
-                                        index--
-                                    }
-                                },
-                                enabled = index > 0
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                    contentDescription = "上一个",
-                                    modifier = Modifier.size(32.dp)
+                                Text(
+                                    text = "🏋️ ${sessionDetail!!.actions.size} 个动作",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
-                            // 页码
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // 分割线
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // ✅ 动作列表（真实数据）
                             Text(
-                                text = "${index + 1} / $totalSessions",
+                                text = "📋 动作详情",
                                 fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
-                            // 右箭头
-                            IconButton(
-                                onClick = {
-                                    if (index < totalSessions - 1) {
-                                        index++
-                                    }
-                                },
-                                enabled = index < totalSessions - 1
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = "下一个",
-                                    modifier = Modifier.size(32.dp)
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // 动作列表
+                            sessionDetail!!.actions.forEach { actionWithDetails ->
+                                TrainingActionPreview(
+                                    action = actionWithDetails.action,
+                                    details = actionWithDetails.details
                                 )
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                        // ✅ 查看详情按钮
-                        Button(
+                    // ✅ 底部：左右切换 + 页码
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
                             onClick = {
-                                val session = sessions[index]
-                                // ✅ 跳转到训练详情页面
-                                navController.navigate(Screen.TrainingResult.pass(session.id, false))
-                                onDismiss()  // 关闭底部弹窗
+                                if (index > 0) {
+                                    index--
+                                }
                             },
-                            modifier = Modifier.fillMaxWidth().height(44.dp),
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            enabled = index > 0
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                contentDescription = "上一个",
+                                modifier = Modifier.size(32.dp)
                             )
-                        ) {
-                            Text("查看详情")
                         }
-                    } else {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+
+                        Text(
+                            text = "${index + 1} / $totalSessions",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        IconButton(
+                            onClick = {
+                                if (index < totalSessions - 1) {
+                                    index++
+                                }
+                            },
+                            enabled = index < totalSessions - 1
                         ) {
-                            Text("暂无训练记录")
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "下一个",
+                                modifier = Modifier.size(32.dp)
+                            )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // ✅ 查看详情按钮
+                    Button(
+                        onClick = {
+                            val session = sessions[index]
+                            navController.navigate(Screen.TrainingResult.pass(session.id, false))
+                            onDismiss()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("查看详情")
                     }
                 }
             }
@@ -269,40 +291,51 @@ fun DayTrainingBottomSheet(
     }
 }
 
-// ✅ 训练会话预览（显示动作数量）
+// ✅ 动作预览项
 @Composable
-fun TrainingSessionPreview(
-    sessionId: Long
+fun TrainingActionPreview(
+    action: TrainingSessionActionEntity,
+    details: List<TrainingSessionActionDetailEntity>
 ) {
-    // TODO: 根据 sessionId 加载动作列表
-    // 这里先显示示例数据
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+    // ✅ 显示动作名称和完成的组数
+    val completedGroups = details.count { it.isCompleted }
+    val totalGroups = details.size
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        for (i in 1..3) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "动作 $i",
-                    fontSize = 13.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = "3组",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        Text(
+            text = action.actionName,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = if (action.isCompleted) {
+                "✅ $completedGroups/$totalGroups"
+            } else {
+                "⏳ $completedGroups/$totalGroups"
+            },
+            fontSize = 13.sp,
+            color = if (action.isCompleted) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
             }
-        }
+        )
     }
 }
 
-// ✅ 获取训练的动作数量
-private fun getActionCount(sessionId: Long): Int {
-    // TODO: 从数据库查询
-    return 3
+// ✅ 获取训练详情
+private suspend fun getSessionDetail(sessionId: Long): TrainingSessionWithDetails? {
+    return try {
+        val database = FitApplication.instance.database
+        database.trainingSessionDao().getSessionWithDetails(sessionId)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
 }

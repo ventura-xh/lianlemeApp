@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.helloandroid.ui.actionlib.PageActionLib
 import com.example.helloandroid.ui.calendar.PageCalendar
+import com.example.helloandroid.ui.calendar.PageMonthlyReport
 import com.example.helloandroid.ui.calendar.PageStatistics
 import com.example.helloandroid.ui.exercise.PageExecutePlan
 import com.example.helloandroid.ui.exercise.PageExercise
@@ -137,6 +138,7 @@ fun AppNavGraph(
         // -----------------------------------------------------------------------------------------
         // calendar ‘日程’页面
         composable(Screen.Calendar.route) { PageCalendar(navController = navController) }
+        composable(Screen.MonthlyReport.route) { PageMonthlyReport( navController = navController) }
         composable(Screen.Statistics.route) { PageStatistics(navController = navController) }
 
         // -----------------------------------------------------------------------------------------

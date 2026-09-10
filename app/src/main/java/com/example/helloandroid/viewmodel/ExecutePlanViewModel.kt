@@ -428,7 +428,8 @@ class ExecutePlanViewModel(
         session.status = 2
 
         viewModelScope.launch {
-            trainingRepository.saveSession(session)
+            // 取消则不保存
+//            trainingRepository.saveSession(session)
             _session.value = null
         }
     }

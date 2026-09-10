@@ -52,6 +52,10 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
     // -----------------------------------------------------------------------------------------
     // calendar ‘日程’页面
     data object Calendar : Screen("calendar")
+    data object MonthlyReport : Screen(
+        route = "monthly_report",
+        hideBottomBar = true
+    )
     data object Statistics : Screen(
         route = "statistics",
         hideBottomBar = true

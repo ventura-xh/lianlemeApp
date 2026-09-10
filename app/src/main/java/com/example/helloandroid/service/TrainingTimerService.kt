@@ -276,14 +276,15 @@ class TrainingTimerService : Service() {
         _restTime.postValue(seconds)
 
         restJob = serviceScope.launch {
-            var remaining = seconds
-            while (isRestRunning && remaining > 0) {
+            while (isRestRunning) {
                 delay(1000L.milliseconds)
-                remaining--
-                _restTime.postValue(remaining)
+                val current = _restTime.value ?: 0
+                if (current <= 0) break
+                val newValue = current - 1
+                _restTime.postValue(newValue)
                 mainHandler.post {
                     if (isOverlayShowing) {
-                        updateOverlayRestTime(formatTime(remaining.toLong()))
+                        updateOverlayRestTime(formatTime(newValue.toLong()))
                     }
                 }
             }

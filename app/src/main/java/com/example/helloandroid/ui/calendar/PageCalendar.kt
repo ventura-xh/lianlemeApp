@@ -175,10 +175,11 @@ fun PageCalendar(
                     }
                 },
                 onMonthReport = {
-                    // TODO: 月报功能
+                    // 月报
+                    navController.navigate(Screen.MonthlyReport.route)  // ✅ 跳转到统月报页面
                 },
                 onStatistics = {
-                    // TODO: 统计功能
+                    // 统计
                     navController.navigate(Screen.Statistics.route)  // ✅ 跳转到统计页面
                 }
             )

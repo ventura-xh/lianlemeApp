@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,6 +46,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -146,6 +148,9 @@ fun PageExecutePlan(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
+    // 确认取消训练
+    var showExitDialog by remember { mutableStateOf(false) }
+
     // ✅ 返回前台时刷新时间
     DisposableEffect(Unit) {
         val observer = LifecycleEventObserver { _, event ->
@@ -197,9 +202,7 @@ fun PageExecutePlan(
                     viewModel.finishSession()
                 },
                 onBack = {
-                    // TODO: 显示确认退出对话框
-                    viewModel.cancelSession()
-                    navController.popBackStack()
+                    showExitDialog = true
                 }
             )
         }
@@ -379,6 +382,53 @@ fun PageExecutePlan(
             onResume = {
                 // ✅ 点击悬浮窗，恢复对话框
                 viewModel.resumeRestDialog()
+            }
+        )
+    }
+
+    // ✅ 退出确认对话框
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = {
+                Text(
+                    text = "取消训练？",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Column {
+                    Text("当前训练尚未完成，确定要取消吗？")
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "⚠️ 取消后的训练记录将不会被保存",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        // ✅ 确认结束，不保存记录
+                        viewModel.cancelSession()
+                        navController.popBackStack()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text("确认取消")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitDialog = false }
+                ) {
+                    Text("继续训练")
+                }
             }
         )
     }
