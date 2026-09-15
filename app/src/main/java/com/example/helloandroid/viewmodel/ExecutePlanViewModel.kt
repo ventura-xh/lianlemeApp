@@ -2,12 +2,14 @@ package com.example.helloandroid.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.helloandroid.FitApplication
 import com.example.helloandroid.entity.model.TrainingGroup
 import com.example.helloandroid.entity.model.TrainingSession
+import com.example.helloandroid.manager.TrainingStateManager
 import com.example.helloandroid.repository.PlanRepository
 import com.example.helloandroid.repository.TrainingRepository
 import com.example.helloandroid.service.TrainingTimerService
@@ -88,6 +90,10 @@ class ExecutePlanViewModel(
             _session.value = trainingSession
             findFirstIncompleteAction()
 
+
+            // 标记全局训练状态
+            TrainingStateManager.startTraining(planId, planName)
+
             _elapsedTime.value = 0L
             val context = getApplication<Application>().applicationContext
             TrainingTimerService.resetTime()
@@ -107,9 +113,17 @@ class ExecutePlanViewModel(
         // ✅ 标记训练活跃
         TrainingTimerService.isTrainingActive = true
 
-        // ✅ 先重置再显示
-        TrainingTimerService.resetTime()
-        _elapsedTime.value = 0L
+        // ✅ 如果服务已在计时，不重置
+        val currentTime = TrainingTimerService.getCurrentElapsedTime()
+        if (currentTime > 0) {
+            // 已有计时，同步时间
+            _elapsedTime.value = currentTime
+        } else {
+            // 新计时
+            TrainingTimerService.resetTime()
+            _elapsedTime.value = 0L
+        }
+
 
         // ✅ 启动计时
         TrainingTimerService.startTimer(context)
@@ -409,6 +423,9 @@ class ExecutePlanViewModel(
     fun finishSession() {
         stopTimer()
 
+        // 清除全局训练状态
+        TrainingStateManager.stopTraining()
+
         val session = _session.value ?: return
         session.endTime = System.currentTimeMillis()
         session.status = 1
@@ -422,6 +439,9 @@ class ExecutePlanViewModel(
 
     fun cancelSession() {
         stopTimer()
+
+        // 清除全局训练状态
+        TrainingStateManager.stopTraining()
 
         val session = _session.value ?: return
         session.endTime = System.currentTimeMillis()

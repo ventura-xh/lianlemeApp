@@ -1,6 +1,7 @@
 package com.example.helloandroid.ui.exercise
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +79,7 @@ import com.example.helloandroid.service.TrainingTimerService
 import com.example.helloandroid.ui.common.NumberInputBottomSheet
 import com.example.helloandroid.viewmodel.ExecutePlanViewModel
 import androidx.compose.runtime.collectAsState
+import com.example.helloandroid.manager.TrainingStateManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,32 +87,11 @@ fun PageExecutePlan(
     planId: Long,
     planName: String = "",
     navController: NavHostController,
-    viewModel: ExecutePlanViewModel = viewModel(
-        factory = ExecutePlanViewModel.factory
-    )
+    viewModel: ExecutePlanViewModel
 ) {
     // ✅ 如果 planName 为空，从 SavedStateHandle 获取
     var finalPlanName by remember { mutableStateOf(planName) }
     var isLoading by remember { mutableStateOf(true) }
-
-    LaunchedEffect(Unit) {
-        // 1. 优先使用传入的 planName
-        var name = planName
-
-        // 2. 如果为空，从 SavedStateHandle 获取
-        if (name.isEmpty()) {
-            val savedName = navController.currentBackStackEntry?.savedStateHandle?.get<String>("planName")
-            if (!savedName.isNullOrEmpty()) {
-                name = savedName
-            }
-        }
-
-        // 3. 如果还是为空，从 session 获取（在 loadPlan 后）
-        finalPlanName = name
-        viewModel.loadPlan(planId, name)
-        viewModel.startTimer()
-        isLoading = false
-    }
 
     val session by viewModel.session.collectAsStateWithLifecycle()
     val currentActionIndex by viewModel.currentActionIndex.collectAsStateWithLifecycle()
@@ -151,6 +132,34 @@ fun PageExecutePlan(
     // 确认取消训练
     var showExitDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        // ✅ 关键：如果 ViewModel 已有 session，不重新加载
+        if (viewModel.session.value == null) {
+            // 首次加载
+            var name = planName
+            if (name.isEmpty()) {
+                val savedName = navController.currentBackStackEntry?.savedStateHandle?.get<String>("planName")
+                if (!savedName.isNullOrEmpty()) {
+                    name = savedName
+                }
+            }
+            finalPlanName = name
+            viewModel.loadPlan(planId, name)
+            viewModel.startTimer()
+        } else {
+            // ✅ 已有 session，只同步时间
+            finalPlanName = viewModel.session.value?.planName ?: planName
+            val latestTime = TrainingTimerService.getCurrentElapsedTime()
+            viewModel.syncElapsedTime(latestTime)
+        }
+        isLoading = false
+    }
+
+    // ✅ 进入运动页面时，标记
+    LaunchedEffect(Unit) {
+        TrainingStateManager.isOnExecutePlanPage = true
+    }
+
     // ✅ 返回前台时刷新时间
     DisposableEffect(Unit) {
         val observer = LifecycleEventObserver { _, event ->
@@ -164,6 +173,7 @@ fun PageExecutePlan(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            TrainingStateManager.isOnExecutePlanPage = false
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
@@ -193,10 +203,15 @@ fun PageExecutePlan(
         }
     }
 
+    // ✅ 拦截系统返回事件
+    BackHandler(enabled = true) {
+        navController.popBackStack(Screen.TrainingPlan.route, inclusive = false)
+    }
+
     Scaffold(
         topBar = {
             ExecuteTopAppBar(
-                elapsedTime = viewModel.elapsedTime.collectAsState().value,
+                elapsedTime = elapsedTime,
                 planName = finalPlanName,
                 onFinish = {
                     viewModel.finishSession()

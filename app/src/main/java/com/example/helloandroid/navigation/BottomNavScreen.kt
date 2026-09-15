@@ -33,7 +33,7 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
     // -----------------------------------------------------------------------------------------
     // exercise ‘运动’页面
     data object Exercise : Screen("exercise")
-    data object ExecutePlan : Screen("execute_plan/{planId}") {
+    data object ExecutePlan : Screen("execute_plan/{planId}", hideBottomBar = true) {
         fun pass(planId: Long) = "execute_plan/$planId"
     }
     data object ExercisePrepare : Screen(route = "exercise_prepare/{planId}", hideBottomBar = true) {
@@ -103,6 +103,7 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
             Profile,
             CreatePlan,
             ActionLibSelect,
+            ExecutePlan,
             ExercisePrepare,
             EditPlan,
             TrainingResult,

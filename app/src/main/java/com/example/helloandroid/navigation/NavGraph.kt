@@ -29,10 +29,12 @@ import com.example.helloandroid.ui.profile.PageProfile
 import com.example.helloandroid.ui.profile.PageRmCalculator
 import com.example.helloandroid.ui.profile.PageSettings
 import com.example.helloandroid.ui.profile.PageUserProfile
+import com.example.helloandroid.viewmodel.ExecutePlanViewModel
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
+    executePlanViewModel: ExecutePlanViewModel
 ) {
     NavHost(
         navController = navController,
@@ -96,7 +98,8 @@ fun AppNavGraph(
             PageExecutePlan(
                 planId = planId,
                 planName = backStackEntry.arguments?.getString("planName") ?: "",
-                navController = navController
+                navController = navController,
+                viewModel = executePlanViewModel
             )
         }
 

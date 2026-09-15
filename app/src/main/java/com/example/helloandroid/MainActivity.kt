@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -44,16 +48,22 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.helloandroid.manager.TrainingStateManager
 import com.example.helloandroid.navigation.AppNavGraph
 import com.example.helloandroid.navigation.BottomNavScreen
 import com.example.helloandroid.navigation.Screen
 import com.example.helloandroid.navigation.bottomNavItems
 import com.example.helloandroid.service.TrainingTimerService
+import com.example.helloandroid.ui.common.InAppTimerWidget
 import com.example.helloandroid.ui.theme.HelloAndroidTheme
+import com.example.helloandroid.viewmodel.ExecutePlanViewModel
 import com.example.helloandroid.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
     private var currentRoute: String? = null
+    private val executePlanViewModel: ExecutePlanViewModel by viewModels {
+        ExecutePlanViewModel.factory
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,7 +89,8 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     onRouteChange = { route ->
                         currentRoute = route
-                    }
+                    },
+                    executePlanViewModel = executePlanViewModel
                 )
             }
         }
@@ -115,6 +126,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(
     onRouteChange: (String?) -> Unit = {},
+    executePlanViewModel: ExecutePlanViewModel,  // ✅ 接收
     mainViewModel: MainViewModel = viewModel()
 ) {
     val navController = rememberNavController()
@@ -127,6 +139,22 @@ fun MainScreen(
     // ✅ 通过路由查找对应的 Screen，获取 hideBottomBar 属性
     val currentScreen = Screen.fromRoute(currentRoute)
     val shouldHideBottomBar = currentScreen?.hideBottomBar ?: false
+
+    // ✅ 从全局状态获取训练信息
+    val isTrainingActive = TrainingStateManager.isTrainingActive
+    val isOnExecutePlanPage = TrainingStateManager.isOnExecutePlanPage
+
+    // ✅ 训练计时时间（从服务获取）
+    var elapsedTime by remember { mutableStateOf(0L) }
+
+    // ✅ 监听服务时间
+    LaunchedEffect(isTrainingActive) {
+        if (isTrainingActive) {
+            TrainingTimerService.elapsedTime.observeForever { time ->
+                time?.let { elapsedTime = it }
+            }
+        }
+    }
 
     // ✅ 通知 Activity 当前路由变化
     LaunchedEffect(currentRoute) {
@@ -153,7 +181,32 @@ fun MainScreen(
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            AppNavGraph(navController = navController)
+            AppNavGraph(
+                navController = navController,
+                executePlanViewModel = executePlanViewModel
+            )
+
+            // ✅ 训练进行中 + 不在运动页面 → 显示 App 内悬浮窗
+            if (isTrainingActive && !isOnExecutePlanPage) {
+                InAppTimerWidget(
+                    elapsedTime = elapsedTime,
+                    onClick = {
+                        // ✅ 点击回到运动页面
+                        val planId = TrainingStateManager.currentPlanId
+                        if (planId != null) {
+                            navController.navigate(
+                                Screen.ExecutePlan.pass(planId)
+                            ) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -241,10 +294,17 @@ private fun PreviewBottomNav_Schedule() {
     }
 }
 
+// ✅ 预览用包装
 @Preview(showBackground = true)
 @Composable
 fun BarPreview() {
-    HelloAndroidTheme() {
-        MainScreen()
+    HelloAndroidTheme {
+        // 使用简单的预览内容
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("MainScreen Preview")
+        }
     }
 }
