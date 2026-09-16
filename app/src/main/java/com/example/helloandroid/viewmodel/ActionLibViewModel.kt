@@ -149,7 +149,7 @@ class ActionLibViewModel(
     }
 
     // ============================================================
-    // 5. 添加自定义动作
+    // 5. 添加、删除自定义动作
     // ============================================================
 
     suspend fun addCustomAction(
@@ -169,6 +169,17 @@ class ActionLibViewModel(
         // 重新加载数据
         loadActions()
         loadGroupedActions()
+    }
+
+
+    suspend fun deleteCustomAction(actionId: Long) {
+        try {
+            repository.deleteCustomAction(actionId)
+            // 刷新数据
+            loadActions()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     // ============================================================

@@ -241,6 +241,13 @@ fun PageActionLib(
         ActionDetailDialog(
             action = selectedActionForDetail,
             onDismiss = { selectedActionForDetail = null },
+            onDelete = { actionId ->
+                // ✅ 删除动作
+                coroutineScope.launch {
+                    viewModel.deleteCustomAction(actionId)
+                    selectedActionForDetail = null
+                }
+            },
             viewModel = viewModel
         )
     }
