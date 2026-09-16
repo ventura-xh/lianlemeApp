@@ -22,8 +22,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
@@ -479,7 +481,7 @@ fun ExecuteTopAppBar(
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = Icons.Default.Check,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "返回"
                 )
             }
@@ -488,8 +490,8 @@ fun ExecuteTopAppBar(
             Button(
                 onClick = onFinish,
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Color(0xFF4CAF50),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Icon(
@@ -504,8 +506,9 @@ fun ExecuteTopAppBar(
         modifier = Modifier.height(48.dp),  // 默认约 64dp，48dp 更紧凑
         windowInsets = WindowInsets(0,0,0,0),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = Color.Transparent,  // ✅ 透明背景
+            titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
         )
     )
 }

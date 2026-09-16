@@ -56,6 +56,8 @@ import com.example.helloandroid.navigation.bottomNavItems
 import com.example.helloandroid.service.TrainingTimerService
 import com.example.helloandroid.ui.common.InAppTimerWidget
 import com.example.helloandroid.ui.theme.HelloAndroidTheme
+import com.example.helloandroid.utils.ThemePreferences
+import com.example.helloandroid.utils.ThemePreferences.isDarkTheme
 import com.example.helloandroid.viewmodel.ExecutePlanViewModel
 import com.example.helloandroid.viewmodel.MainViewModel
 
@@ -72,6 +74,9 @@ class MainActivity : ComponentActivity() {
         // ✅ 监听应用前后台切换
         setupAppLifecycleObserver()
 
+        // 初始化主题偏好
+        ThemePreferences.init(this)
+
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (isOnBottomNavScreen()) {
@@ -85,7 +90,9 @@ class MainActivity : ComponentActivity() {
         })
 
         setContent {
-            HelloAndroidTheme {
+            val isDarkTheme = ThemePreferences.isDarkTheme(this)
+            // 使用ThemePreferences控制主题
+            HelloAndroidTheme(darkTheme = isDarkTheme) {
                 MainScreen(
                     onRouteChange = { route ->
                         currentRoute = route

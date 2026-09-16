@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -17,13 +18,17 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.helloandroid.ui.theme.HelloAndroidTheme
 
 @Composable
 fun RestDialog(
@@ -92,44 +97,52 @@ fun RestDialog(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // -10s 按钮
-                    Button(
+                    // ✅ -10s按钮
+                    OutlinedButton(
                         onClick = { onAdjust(-10) },
-                        modifier = Modifier.size(60.dp),
+                        modifier = Modifier
+                            .width(72.dp)
+                            .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Remove,
-                            contentDescription = "-10s",
-                            modifier = Modifier.size(24.dp)
+                        Text(
+                            text = "-10s",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "总休息: ${totalSeconds}",
+                        text = "${totalSeconds}",
                         fontSize = 24.sp,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     // +10s 按钮
-                    Button(
+                    OutlinedButton(
                         onClick = { onAdjust(10) },
-                        modifier = Modifier.size(60.dp),
+                        modifier = Modifier
+                            .width(72.dp)
+                            .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "+10s",
-                            modifier = Modifier.size(24.dp)
+                        Text(
+                            text = "+10s",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -143,7 +156,7 @@ fun RestDialog(
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                Text("完成休息")
+                Text("完成")
             }
         }
     )

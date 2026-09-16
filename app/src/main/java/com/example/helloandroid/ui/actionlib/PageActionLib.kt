@@ -21,6 +21,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
@@ -36,6 +38,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Scaffold
@@ -488,26 +491,30 @@ fun ActionLibTopAppBar(
         },
         navigationIcon = { Spacer(modifier = Modifier.size(0.dp)) },
         actions = {
-            Button(
+            OutlinedButton(
                 onClick = onAddAction,
                 modifier = Modifier
-                    .padding(end = 4.dp)
-                    .height(32.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    .height(36.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,  // ✅ 设置背景色
-                    contentColor = MaterialTheme.colorScheme.onSurface   // ✅ 设置文字颜色
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
-                Text("➕ 动作")
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "动作",
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("动作", fontSize = 12.sp)
             }
         },
         modifier = Modifier.height(48.dp),  // 默认约 64dp，48dp 更紧凑
         windowInsets = WindowInsets(0,0,0,0),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = Color.Transparent,  // ✅ 透明背景
+            titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
         )
     )
 }
@@ -564,8 +571,9 @@ fun SelectModeTopAppBar(
         modifier = Modifier.height(48.dp),  // 默认约 64dp，48dp 更紧凑
         windowInsets = WindowInsets(0,0,0,0),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = Color.Transparent,  // ✅ 透明背景
+            titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
         )
     )
 }

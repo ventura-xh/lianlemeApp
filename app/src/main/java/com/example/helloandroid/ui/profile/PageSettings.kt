@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -50,21 +51,23 @@ import com.example.helloandroid.FitApplication
 import com.example.helloandroid.repository.ActionLibRepository
 import com.example.helloandroid.ui.actionlib.ActionLibViewModel
 import com.example.helloandroid.ui.common.ConfirmDialog
+import com.example.helloandroid.utils.ThemePreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PageSettings(
     navController: NavHostController
 ) {
-    // ✅ 设置项状态
-    var notificationEnabled by remember { mutableStateOf(true) }
-    var darkModeEnabled by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    // ✅ 状态
+    var showThemeSheet by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current  // ✅ 获取 Context
+    // ✅ 当前主题状态
+    var currentTheme by remember { mutableStateOf(ThemePreferences.darkModeState) }
 
-    // ✅ 在 PageSettings 内部获取 ViewModel
+    // ✅ ActionLibViewModel
     val actionLibViewModel: ActionLibViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -98,10 +101,11 @@ fun PageSettings(
                     }
                 },
                 modifier = Modifier.height(48.dp),
-                windowInsets = WindowInsets(0,0,0,0),
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.Transparent,  // ✅ 透明背景
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
                 )
             )
         }
@@ -112,28 +116,29 @@ fun PageSettings(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            // ✅ 通用设置
+//            // ✅ 通用设置
+//            item {
+//                SettingsSectionHeader(title = "通用")
+//            }
+
+            // ✅ 深色模式（三态：跟随系统 / 浅色 / 深色）
             item {
-                SettingsSectionHeader(title = "通用")
+                SettingsSectionHeader(title = "外观")
             }
 
             item {
-                SettingsSwitchItem(
-                    icon = Icons.Default.Notifications,
-                    title = "通知",
-                    subtitle = "开启训练提醒和通知",
-                    checked = notificationEnabled,
-                    onCheckedChange = { notificationEnabled = it }
-                )
-            }
-
-            item {
-                SettingsSwitchItem(
+                SettingsClickItem(
                     icon = Icons.Outlined.DataUsage,
-                    title = "深色模式",
-                    subtitle = "跟随系统或手动切换",
-                    checked = darkModeEnabled,
-                    onCheckedChange = { darkModeEnabled = it }
+                    title = "主题模式",
+                    subtitle = when (currentTheme) {
+                        1 -> "浅色模式"
+                        2 -> "深色模式"
+                        else -> "跟随系统"
+                    },
+                    onClick = {
+                        // ✅ 打开主题选择底部弹窗
+                        showThemeSheet = true
+                    }
                 )
             }
 
@@ -147,9 +152,7 @@ fun PageSettings(
                     icon = Icons.Default.RestartAlt,
                     title = "重置动作库",
                     subtitle = "恢复所有预设动作，清除自定义动作",
-                    onClick = {
-                        showResetDialog = true
-                    }
+                    onClick = { showResetDialog = true }
                 )
             }
 
@@ -158,9 +161,7 @@ fun PageSettings(
                     icon = Icons.Default.Delete,
                     title = "清除所有数据",
                     subtitle = "删除所有训练记录和计划",
-                    onClick = {
-                        showConfirmDialog = true
-                    }
+                    onClick = { showConfirmDialog = true }
                 )
             }
 
@@ -174,17 +175,26 @@ fun PageSettings(
                     icon = Icons.Default.Info,
                     title = "版本信息",
                     subtitle = "v1.0.0",
-                    onClick = {
-                        // TODO: 显示版本信息
-                    }
+                    onClick = { /* TODO */ }
                 )
             }
 
-            // 底部留白
             item {
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+
+    // ✅ 主题选择底部弹窗
+    if (showThemeSheet) {
+        ThemeSelectBottomSheet(
+            currentTheme = currentTheme,
+            onThemeSelected = { theme ->
+                currentTheme = theme
+                ThemePreferences.setDarkMode(context, theme)
+            },
+            onDismiss = { showThemeSheet = false }
+        )
     }
 
     // ✅ 重置动作库确认对话框

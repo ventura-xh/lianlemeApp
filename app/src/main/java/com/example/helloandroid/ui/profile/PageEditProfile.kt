@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -129,8 +130,9 @@ fun PageEditProfile(
                 modifier = Modifier.height(48.dp),
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.Transparent,  // ✅ 透明背景
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
                 )
             )
         }

@@ -136,11 +136,11 @@ fun PageExercisePrepare(
                 modifier = Modifier.height(48.dp),  // 默认约 64dp，48dp 更紧凑
                 windowInsets = WindowInsets(0,0,0,0),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    containerColor = Color.Transparent,  // ✅ 透明背景
                     scrolledContainerColor = Color.Unspecified,
                     navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    actionIconContentColor = Color.Unspecified
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
                 )
             )
         }

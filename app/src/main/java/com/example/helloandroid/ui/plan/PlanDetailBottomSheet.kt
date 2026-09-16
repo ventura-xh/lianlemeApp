@@ -259,6 +259,10 @@ fun PlanDetailBottomSheet(
                         onClick = {
                             navController?.navigate(Screen.ExercisePrepare.pass(planId))
                         },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF388E3C),
+                            contentColor = MaterialTheme.colorScheme.surface
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
@@ -286,7 +290,7 @@ fun PlanActionWithGroupsCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = Color.Transparent
         )
     ) {
         Column {

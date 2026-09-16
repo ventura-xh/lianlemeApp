@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -43,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -187,8 +189,9 @@ fun PageBodyData(
                 modifier = Modifier.height(48.dp),  // 默认约 64dp，48dp 更紧凑
                 windowInsets = WindowInsets(0,0,0,0),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.Transparent,  // ✅ 透明背景
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
                 )
             )
         }
@@ -251,6 +254,10 @@ fun PageBodyData(
                             label = { Text("体重 (kg)") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                         )
                         OutlinedTextField(
@@ -259,6 +266,10 @@ fun PageBodyData(
                             label = { Text("身高 (cm)") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                         )
                     }
@@ -273,6 +284,10 @@ fun PageBodyData(
                             label = { Text("年龄") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)  // ✅ 小数键盘
                         )
                         OutlinedTextField(
@@ -281,6 +296,10 @@ fun PageBodyData(
                             label = { Text("体脂率 (%)") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                         )
                     }
@@ -295,6 +314,10 @@ fun PageBodyData(
                             label = { Text("肌肉量 (kg)") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                         )
                         OutlinedTextField(
@@ -303,6 +326,10 @@ fun PageBodyData(
                             label = { Text("BMI") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            ),
                             enabled = false  // BMI 自动计算
                         )
                     }
@@ -360,6 +387,10 @@ fun PageBodyData(
                                 label = { Text("胸围") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                ),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                             )
                             OutlinedTextField(
@@ -368,6 +399,10 @@ fun PageBodyData(
                                 label = { Text("腰围") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                ),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                             )
                         }
@@ -382,6 +417,10 @@ fun PageBodyData(
                                 label = { Text("臀围") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                ),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                             )
                             OutlinedTextField(
@@ -390,6 +429,10 @@ fun PageBodyData(
                                 label = { Text("臂围") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                ),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                             )
                         }
@@ -403,6 +446,10 @@ fun PageBodyData(
                                 label = { Text("腿围") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                ),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)  // ✅ 小数键盘
                             )
                         }

@@ -1,5 +1,6 @@
 package com.example.helloandroid.ui.profile
 
+import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,8 +25,11 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -146,8 +151,9 @@ fun PageBodyFatCalculator(
                 modifier = Modifier.height(48.dp),
                 windowInsets = WindowInsets(0,0,0,0),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.Transparent,  // ✅ 透明背景
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,  // ✅ 文字颜色
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface  // ✅ 图标颜色
                 )
             )
         }
@@ -223,7 +229,11 @@ fun PageBodyFatCalculator(
                 label = { Text("年龄") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                )
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -279,7 +289,11 @@ fun PageBodyFatCalculator(
                             label = { Text("胸 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = abdominal,
@@ -287,7 +301,11 @@ fun PageBodyFatCalculator(
                             label = { Text("腹 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = thigh,
@@ -295,7 +313,11 @@ fun PageBodyFatCalculator(
                             label = { Text("大腿 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                     }
                 }
@@ -324,7 +346,11 @@ fun PageBodyFatCalculator(
                             label = { Text("胸 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = axillary,
@@ -332,7 +358,11 @@ fun PageBodyFatCalculator(
                             label = { Text("腋窝 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = triceps,
@@ -340,7 +370,11 @@ fun PageBodyFatCalculator(
                             label = { Text("三头肌 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                 focusedContainerColor = MaterialTheme.colorScheme.background,
+                                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = subscapular,
@@ -348,7 +382,11 @@ fun PageBodyFatCalculator(
                             label = { Text("肩胛下 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = abdominal7,
@@ -356,7 +394,11 @@ fun PageBodyFatCalculator(
                             label = { Text("腹 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = suprailiac,
@@ -364,7 +406,11 @@ fun PageBodyFatCalculator(
                             label = { Text("髂上 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                         OutlinedTextField(
                             value = thigh7,
@@ -372,7 +418,11 @@ fun PageBodyFatCalculator(
                             label = { Text("大腿 (mm)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            )
                         )
                     }
                 }
@@ -546,13 +596,14 @@ fun BodyFatIndicator(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        androidx.compose.material3.LinearProgressIndicator(
-            progress = (percentage / 40f).toFloat().coerceIn(0f, 1f),
-            modifier = Modifier
-                .weight(1f)
-                .height(12.dp),
-            color = color,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant
+        LinearProgressIndicator(
+        progress = { (percentage / 40f).toFloat().coerceIn(0f, 1f) },
+        modifier = Modifier
+                        .weight(1f)
+                        .height(12.dp),
+        color = color,
+        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
         )
         Text(
             text = text,

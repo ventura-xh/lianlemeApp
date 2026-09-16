@@ -26,6 +26,7 @@ import com.example.helloandroid.R
 import kotlinx.coroutines.*
 import androidx.core.net.toUri
 import com.example.helloandroid.MainActivity
+import com.example.helloandroid.utils.SoundHelper
 import kotlin.time.Duration.Companion.milliseconds
 
 class TrainingTimerService : Service() {
@@ -291,7 +292,7 @@ class TrainingTimerService : Service() {
             // 倒计时结束
             mainHandler.post {
                 hideOverlayRestTime()
-                vibrate(this@TrainingTimerService)
+                SoundHelper.playRestComplete(this@TrainingTimerService)
                 // ✅ 恢复显示总时间
                 val currentTime = _elapsedTime.value ?: 0L
                 updateOverlayTime(formatTime(currentTime))

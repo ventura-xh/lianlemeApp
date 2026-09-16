@@ -97,18 +97,29 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
     companion object {
         // ✅ 所有页面的列表
         val allScreens = listOf(
+            // plan
             TrainingPlan,
-            ActionLib,
-            Calendar,
-            Profile,
             CreatePlan,
+            EditPlan,
+            // actionLib
+            ActionLib,
             ActionLibSelect,
+            // exercise
             ExecutePlan,
             ExercisePrepare,
-            EditPlan,
             TrainingResult,
+            // calender
+            Calendar,
             MonthlyReport,
-            Statistics  // ✅ 确保添加了 Statistics
+            Statistics,
+            // profile
+            Profile,
+            BodyData,
+            RmCalculator,
+            BodyFatCalculator,
+            Settings,
+            UserProfile,
+            EditProfile
         )
 
         // ✅ 根据路由查找对应的 Screen
