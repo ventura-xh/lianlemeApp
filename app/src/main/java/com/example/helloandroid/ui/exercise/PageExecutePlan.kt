@@ -25,8 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Timer
@@ -44,8 +42,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -72,7 +68,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.helloandroid.entity.model.TrainingAction
 import com.example.helloandroid.entity.model.TrainingGroup
@@ -80,7 +75,6 @@ import com.example.helloandroid.navigation.Screen
 import com.example.helloandroid.service.TrainingTimerService
 import com.example.helloandroid.ui.common.NumberInputBottomSheet
 import com.example.helloandroid.viewmodel.ExecutePlanViewModel
-import androidx.compose.runtime.collectAsState
 import com.example.helloandroid.manager.TrainingStateManager
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,8 +119,8 @@ fun PageExecutePlan(
     // ✅ 当 refreshTrigger 变化时，什么都不做，但会触发重组
     val refreshKey = refreshTrigger
 
-    // 训练结果id
-    val savedSessionId by viewModel.savedSessionId.collectAsStateWithLifecycle()
+    // ✅ 跳转信号
+    val shouldNavigateToResult by viewModel.shouldNavigateToResult.collectAsStateWithLifecycle()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -190,18 +184,22 @@ fun PageExecutePlan(
     }
 
     // ✅ 监听保存结果，跳转到结果页面
-    LaunchedEffect(savedSessionId) {
-        savedSessionId?.let { sessionId ->
-            navController.navigate(Screen.TrainingResult.pass(sessionId, true)) {
-                // 清除当前页面（ExecutePlan）和训练准备页面
-                popUpTo(Screen.ExercisePrepare.route) {
-                    inclusive = true  // 包含训练准备页面
+    LaunchedEffect(shouldNavigateToResult) {
+        shouldNavigateToResult?.let { sessionId ->
+            Log.d("PageExecutePlan", "触发跳转到结果页面: $sessionId")
+
+            // ✅ 只有当前训练确实存在时才跳转
+            // 如果 session 已经为 null（已完成），才跳转
+            if (viewModel.session.value == null) {
+                navController.navigate(Screen.TrainingResult.pass(sessionId, true)) {
+                    popUpTo(Screen.ExercisePrepare.route) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
                 }
-                launchSingleTop = true
             }
             // 清除状态，避免重复跳转
-            viewModel.clearSavedSessionId()
-
+            viewModel.clearNavigationSignal()
         }
     }
 
@@ -489,7 +487,7 @@ fun ExecuteTopAppBar(
         actions = {
             Button(
                 onClick = onFinish,
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4CAF50),
                     contentColor = MaterialTheme.colorScheme.onSurface
                 )

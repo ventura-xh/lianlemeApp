@@ -21,7 +21,40 @@ data class TrainingSessionWithDetails(
         entity = TrainingSessionActionEntity::class
     )
     val actions: List<TrainingActionWithDetails>
-)
+) {
+    fun toTrainingSession(): TrainingSession {
+        val session = TrainingSession(
+            planId = this.session.planId,
+            planName = this.session.planName,
+            startTime = this.session.startTime,
+            endTime = this.session.endTime,
+            status = this.session.status
+        )
+
+        this.actions.forEach { actionWithDetails ->
+            val groups = actionWithDetails.details.mapIndexed { index, detail ->
+                TrainingGroup(
+                    groupIndex = detail.groupIndex.toInt(),
+                    weight = detail.weight,
+                    reps = detail.reps.toInt(),
+                    isCompleted = detail.isCompleted,
+                    completedAt = detail.completedAt
+                )
+            }.toMutableList()
+
+            session.actions.add(
+                TrainingAction(
+                    actionId = actionWithDetails.action.actionId,
+                    actionName = actionWithDetails.action.actionName,
+                    groups = groups,
+                    isCompleted = actionWithDetails.action.isCompleted
+                )
+            )
+        }
+
+        return session
+    }
+}
 
 /**
  * 训练会话中的单个动作 + 所有组详情

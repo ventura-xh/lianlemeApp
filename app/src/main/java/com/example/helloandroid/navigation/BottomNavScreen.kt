@@ -136,7 +136,7 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
                             val prefix = screen.route.split("/{").first()
                             route.startsWith(prefix)
                         }
-                        else -> route == screen.route
+                        else -> false
                     }
                 }
         }

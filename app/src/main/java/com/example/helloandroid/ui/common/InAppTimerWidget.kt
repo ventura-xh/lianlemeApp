@@ -31,9 +31,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import kotlin.math.roundToInt
 
@@ -48,28 +52,28 @@ fun InAppTimerWidget(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val density = LocalDensity.current
-    val configuration = LocalConfiguration.current
-
-    // 屏幕尺寸
-    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
-    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
 
     // 悬浮窗位置
-    var offsetX by remember { mutableStateOf(0f) }
-    var offsetY by remember { mutableStateOf(200f) }
     var widgetSize by remember { mutableStateOf(0f) }
 
-    val positionProvider = remember(offsetX, offsetY) {
-        object : androidx.compose.ui.window.PopupPositionProvider {
+    // ✅ 固定初始位置（从右下角偏移）
+    val fixedOffsetX = 16.dp    // 距右侧 16dp
+    val fixedOffsetY = 100.dp   // 距底部 200dp
+
+    // ✅ 固定位置提供者
+    val positionProvider = remember {
+        object : PopupPositionProvider {
             override fun calculatePosition(
-                anchorBounds: androidx.compose.ui.unit.IntRect,
-                windowSize: androidx.compose.ui.unit.IntSize,
-                layoutDirection: androidx.compose.ui.unit.LayoutDirection,
-                popupContentSize: androidx.compose.ui.unit.IntSize
+                anchorBounds: IntRect,
+                windowSize: IntSize,
+                layoutDirection: LayoutDirection,
+                popupContentSize: IntSize
             ): IntOffset {
-                val paddingPx = with(density) { 16.dp.toPx() }
-                val x = (windowSize.width - popupContentSize.width - paddingPx - offsetX).roundToInt()
-                val y = (windowSize.height - popupContentSize.height - paddingPx - offsetY).roundToInt()
+                val offsetXPx = with(density) { fixedOffsetX.toPx() }
+                val offsetYPx = with(density) { fixedOffsetY.toPx() }
+
+                val x = (windowSize.width - popupContentSize.width - offsetXPx).roundToInt()
+                val y = (windowSize.height - popupContentSize.height - offsetYPx).roundToInt()
                 return IntOffset(x, y)
             }
         }
@@ -95,22 +99,6 @@ fun InAppTimerWidget(
                     shape = RoundedCornerShape(24.dp),
                     clip = false
                 )
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            val paddingPx = with(density) { 16.dp.toPx() }
-                            val maxOffsetX = screenWidthPx - widgetSize - paddingPx
-                            val maxOffsetY = screenHeightPx - widgetSize - paddingPx
-
-                            val safeMaxX = if (maxOffsetX > 0) maxOffsetX else 0f
-                            val safeMaxY = if (maxOffsetY > 0) maxOffsetY else 0f
-
-                            offsetX = (offsetX + dragAmount.x).coerceIn(0f, safeMaxX)
-                            offsetY = (offsetY + dragAmount.y).coerceIn(0f, safeMaxY)
-                        }
-                    )
-                }
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null

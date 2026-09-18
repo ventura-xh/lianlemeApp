@@ -108,13 +108,20 @@ fun PageEditPlan(
 
     // ✅ 监听从选择动作页面返回的数据
     LaunchedEffect(Unit) {
-        navController.currentBackStackEntry?.savedStateHandle?.getLiveData<Long>("selected_action_id")
-            ?.observeForever { actionId ->
-                actionId?.let {
-                    coroutineScope.launch {
-                        viewModel.addAction(it)
+        navController.currentBackStackEntry?.savedStateHandle
+            ?.getLiveData<String>("selected_action_ids")  // ✅ 复数 key，String
+            ?.observeForever { idsString ->
+                idsString?.let {
+                    val actionIds = it.split(",").mapNotNull { id -> id.toLongOrNull() }
+                    if (actionIds.isNotEmpty()) {
+                        coroutineScope.launch {
+                            actionIds.forEach { actionId ->
+                                viewModel.addAction(actionId)
+                            }
+                        }
                     }
-                    navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("selected_action_id")
+                    navController.currentBackStackEntry?.savedStateHandle
+                        ?.remove<String>("selected_action_ids")
                 }
             }
     }

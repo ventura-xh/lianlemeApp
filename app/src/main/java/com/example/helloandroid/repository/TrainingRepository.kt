@@ -1,5 +1,6 @@
 package com.example.helloandroid.repository
 
+import androidx.room.Transaction
 import com.example.helloandroid.dao.PlanFullDao
 import com.example.helloandroid.dao.TrainingSessionActionDao
 import com.example.helloandroid.dao.TrainingSessionActionDetailDao
@@ -66,29 +67,40 @@ class TrainingRepository(
     }
 
     // ============================================================
-    // 2. 保存训练结果（结束时一次性保存）
+    // 2. 创建训练会话（开始时调用，status = 0）
     // ============================================================
 
     /**
-     * 保存完整的训练会话到数据库（结束时调用）
+     * 创建训练会话（训练开始时调用）
+     * @return 数据库生成的 sessionId
      */
-    suspend fun saveSession(session: TrainingSession): Long {
-        // 1. 插入训练会话
+    suspend fun createSession(session: TrainingSession): Long {
+        // ✅ 1. 插入训练会话（status = 0）
         val sessionId = sessionDao.insert(
             TrainingSessionEntity(
                 planId = session.planId,
                 planName = session.planName,
                 startTime = session.startTime,
-                endTime = session.endTime,
-                totalDuration = if (session.endTime > 0) {
-                    (session.endTime - session.startTime) / 1000
-                } else 0,
-                status = session.status
+                endTime = 0,
+                totalDuration = 0,
+                status = 0  // ✅ 进行中
             )
         )
 
-        // 2. 插入动作
-        session.actions.forEachIndexed { sortOrder, action ->
+        // ✅ 2. 插入动作和组详情
+        saveSessionActions(sessionId, session.actions)
+
+        return sessionId
+    }
+
+    /**
+     * 保存训练动作和组详情（内部方法）
+     */
+    private suspend fun saveSessionActions(
+        sessionId: Long,
+        actions: List<TrainingAction>
+    ) {
+        actions.forEachIndexed { sortOrder, action ->
             val actionId = actionDao.insert(
                 TrainingSessionActionEntity(
                     sessionId = sessionId,
@@ -99,7 +111,6 @@ class TrainingRepository(
                 )
             )
 
-            // 3. 插入组详情
             action.groups.forEach { group ->
                 detailDao.insert(
                     TrainingSessionActionDetailEntity(
@@ -108,17 +119,166 @@ class TrainingRepository(
                         weight = group.weight,
                         reps = group.reps,
                         isCompleted = group.isCompleted,
-                        completedAt = if (group.isCompleted) System.currentTimeMillis() else 0
+                        completedAt = group.completedAt
                     )
                 )
             }
         }
-
-        return sessionId
     }
 
     // ============================================================
-    // 3. 查询历史记录
+    // 3. 更新训练状态（完成/取消时调用）
+    // ============================================================
+    /**
+     * 保存训练会话的完整数据（完成时调用）
+     * 更新动作和组的完成状态、重量、次数
+     */
+    suspend fun saveSessionDetails(
+        sessionId: Long,
+        actions: List<TrainingAction>
+    ) {
+        // ✅ 1. 获取数据库中的动作列表
+        val existingActions = actionDao.getActionsBySessionId(sessionId)
+        val actionMap = existingActions.associateBy { it.actionId }
+
+        actions.forEachIndexed { sortOrder, action ->
+            val existingAction = actionMap[action.actionId]
+
+            if (existingAction != null) {
+                // ✅ 2. 更新动作完成状态和排序
+                actionDao.update(
+                    existingAction.copy(
+                        sortOrder = sortOrder,
+                        isCompleted = action.isCompleted
+                    )
+                )
+
+                // ✅ 3. 获取该动作的所有组详情
+                val existingDetails = detailDao.getDetailsByActionId(existingAction.id)
+                val detailMap = existingDetails.associateBy { it.groupIndex.toInt() }
+
+                action.groups.forEachIndexed { groupIndex, group ->
+                    val existingDetail = detailMap[groupIndex]
+
+                    if (existingDetail != null) {
+                        // ✅ 4. 更新组的完成状态、重量、次数
+                        detailDao.update(
+                            existingDetail.copy(
+                                weight = group.weight,
+                                reps = group.reps,
+                                isCompleted = group.isCompleted,
+                                completedAt = group.completedAt
+                            )
+                        )
+                    } else {
+                        // ✅ 5. 新增的组，插入数据库
+                        detailDao.insert(
+                            TrainingSessionActionDetailEntity(
+                                sessionActionId = existingAction.id,
+                                groupIndex = groupIndex,
+                                weight = group.weight,
+                                reps = group.reps,
+                                isCompleted = group.isCompleted,
+                                completedAt = group.completedAt
+                            )
+                        )
+                    }
+                }
+
+                // ✅ 6. 删除多余的组（如果用户删除了组）
+                val validGroupIndices = action.groups.indices.map { it }
+                existingDetails.forEach { detail ->
+                    if (detail.groupIndex !in validGroupIndices) {
+                        detailDao.deleteById(detail.id)
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 完成训练（status = 1）
+     */
+    suspend fun finishSession(sessionId: Long) {
+        val session = sessionDao.getSessionById(sessionId) ?: return
+        val endTime = System.currentTimeMillis()
+        val duration = (endTime - session.startTime) / 1000
+
+        sessionDao.update(
+            session.copy(
+                endTime = endTime,
+                totalDuration = duration,
+                status = 1  // ✅ 已完成
+            )
+        )
+    }
+
+    /**
+     * 取消训练（status = 2）
+     */
+    suspend fun cancelSession(sessionId: Long) {
+        val session = sessionDao.getSessionById(sessionId) ?: return
+        val endTime = System.currentTimeMillis()
+        val duration = (endTime - session.startTime) / 1000
+
+        sessionDao.update(
+            session.copy(
+                endTime = endTime,
+                totalDuration = duration,
+                status = 2  // ✅ 已取消
+            )
+        )
+    }
+
+    @Transaction
+    suspend fun finishSessionWithDetails(
+        sessionId: Long,
+        actions: List<TrainingAction>
+    ) {
+        // ✅ 1. 保存最新数据
+        saveSessionDetails(sessionId, actions)
+
+        // ✅ 2. 更新状态
+        finishSession(sessionId)
+    }
+
+    @Transaction
+    suspend fun CancelSessionWithDetails(
+        sessionId: Long,
+        actions: List<TrainingAction>
+    ) {
+        // ✅ 1. 保存最新数据
+        saveSessionDetails(sessionId, actions)
+
+        // ✅ 2. 更新状态
+        cancelSession(sessionId)
+    }
+
+    // ============================================================
+    // 4. 更新组完成状态（实时保存进度，可选）
+    // ============================================================
+
+    /**
+     * 更新组完成状态
+     */
+    suspend fun updateGroupCompleted(
+        sessionActionId: Long,
+        groupIndex: Int,
+        isCompleted: Boolean,
+        weight: Double,
+        reps: Int
+    ) {
+        detailDao.updateGroupByIndex(
+            sessionActionId = sessionActionId,
+            groupIndex = groupIndex,
+            isCompleted = isCompleted,
+            weight = weight,
+            reps = reps
+        )
+    }
+
+    // ============================================================
+    // 5. 查询
     // ============================================================
 
     /**
@@ -168,4 +328,13 @@ class TrainingRepository(
             emptyList()
         }
     }
+
+    /**
+     * 清理超过24小时未完成的训练（避免脏数据）
+     */
+    suspend fun cleanupStaleSessions() {
+        val threshold = System.currentTimeMillis() - 24 * 60 * 60 * 1000
+        sessionDao.deleteStaleActiveSessions(threshold)
+    }
+
 }

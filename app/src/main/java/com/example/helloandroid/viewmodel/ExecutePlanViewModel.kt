@@ -2,11 +2,11 @@ package com.example.helloandroid.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.helloandroid.FitApplication
+import com.example.helloandroid.entity.TrainingSessionEntity
 import com.example.helloandroid.entity.model.TrainingGroup
 import com.example.helloandroid.entity.model.TrainingSession
 import com.example.helloandroid.manager.TrainingStateManager
@@ -31,8 +31,22 @@ class ExecutePlanViewModel(
     private val _session = MutableStateFlow<TrainingSession?>(null)
     val session: StateFlow<TrainingSession?> = _session.asStateFlow()
 
-    private val _savedSessionId = MutableStateFlow<Long?>(null)
-    val savedSessionId: StateFlow<Long?> = _savedSessionId.asStateFlow()
+    // ✅ 当前训练的 sessionId
+    private val _currentSessionId  = MutableStateFlow<Long?>(null)
+    val currentSessionId: StateFlow<Long?> = _currentSessionId .asStateFlow()
+
+    // ✅ 用于跳转的信号（只在校验通过时设置）
+    private val _shouldNavigateToResult = MutableStateFlow<Long?>(null)
+    val shouldNavigateToResult: StateFlow<Long?> = _shouldNavigateToResult.asStateFlow()
+
+    // ✅ 待恢复的训练（用于弹窗提示）
+    private val _pendingRecoverySession = MutableStateFlow<TrainingSessionEntity?>(null)
+    val pendingRecoverySession: StateFlow<TrainingSessionEntity?> = _pendingRecoverySession.asStateFlow()
+
+    // ✅ 是否需要显示恢复确认对话框
+    private val _showRecoveryDialog = MutableStateFlow(false)
+    val showRecoveryDialog: StateFlow<Boolean> = _showRecoveryDialog.asStateFlow()
+
 
     // ✅ 当前展开的动作卡片索引
     private val _currentActionIndex = MutableStateFlow(0)
@@ -86,7 +100,14 @@ class ExecutePlanViewModel(
 
     fun loadPlan(planId: Long, planName: String) {
         viewModelScope.launch {
+            // ✅ 1. 加载内存数据
             val trainingSession = trainingRepository.loadSessionFromPlan(planId, planName)
+
+            // ✅ 2. 创建数据库记录（status = 0）
+            val sessionId = trainingRepository.createSession(trainingSession)
+            _currentSessionId.value = sessionId
+
+            // ✅ 3. 更新内存状态
             _session.value = trainingSession
             findFirstIncompleteAction()
 
@@ -426,14 +447,26 @@ class ExecutePlanViewModel(
         // 清除全局训练状态
         TrainingStateManager.stopTraining()
 
-        val session = _session.value ?: return
-        session.endTime = System.currentTimeMillis()
-        session.status = 1
+        val sessionId = _currentSessionId.value
+        if (sessionId == null) {
+            android.util.Log.e("ExecutePlanViewModel", "没有正在进行的训练")
+            return
+        }
+
+        val currentSession = _session.value
+        if (currentSession == null) {
+            android.util.Log.e("ExecutePlanViewModel", "训练数据为空")
+            return
+        }
 
         viewModelScope.launch {
-            val id = trainingRepository.saveSession(session)
-            _savedSessionId.value = id
+            trainingRepository.finishSessionWithDetails(sessionId, currentSession.actions)
+
             _session.value = null
+            _currentSessionId.value = null
+
+            // ✅ 4. 最后设置跳转信号（确保前面都完成）
+            _shouldNavigateToResult.value = sessionId
         }
     }
 
@@ -443,19 +476,107 @@ class ExecutePlanViewModel(
         // 清除全局训练状态
         TrainingStateManager.stopTraining()
 
-        val session = _session.value ?: return
-        session.endTime = System.currentTimeMillis()
-        session.status = 2
+        val sessionId = _currentSessionId.value
+        if (sessionId == null) {
+            android.util.Log.e("ExecutePlanViewModel", "没有正在进行的训练")
+            return
+        }
+        val currentSession = _session.value
+        if (currentSession == null) {
+            android.util.Log.e("ExecutePlanViewModel", "训练数据为空")
+            return
+        }
 
         viewModelScope.launch {
-            // 取消则不保存
-//            trainingRepository.saveSession(session)
+            trainingRepository.CancelSessionWithDetails(sessionId, currentSession.actions)
+
             _session.value = null
+            _currentSessionId.value = null
         }
     }
 
-    fun clearSavedSessionId() {
-        _savedSessionId.value = null
+    /**
+     * 检查是否有未完成的训练（App 启动时调用）
+     */
+    fun checkActiveSession() {
+        viewModelScope.launch {
+            try {
+                val activeSession = trainingRepository.getActiveSession()
+                if (activeSession != null) {
+                    // ✅ 有待恢复的训练，显示确认对话框
+                    _pendingRecoverySession.value = activeSession
+                    _showRecoveryDialog.value = true
+                    android.util.Log.d("ExecutePlanViewModel", "发现未完成训练: sessionId=${activeSession.id}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ExecutePlanViewModel", "检查训练失败", e)
+            }
+        }
+    }
+
+    /**
+     * 用户确认恢复训练
+     */
+    fun confirmRecovery() {
+        val session = _pendingRecoverySession.value ?: return
+        viewModelScope.launch {
+            try {
+                _currentSessionId.value = session.id
+                val sessionDetail = trainingRepository.getSessionWithDetails(session.id)
+
+                if (sessionDetail != null) {
+                    val trainingSession = sessionDetail.toTrainingSession()
+                    _session.value = trainingSession
+                    findFirstIncompleteAction()
+                    // 恢复计时器（从原始开始时间计算已用时间）
+                    restoreTimer(session.startTime)
+                }
+
+                _pendingRecoverySession.value = null
+                _showRecoveryDialog.value = false
+
+                android.util.Log.d("ExecutePlanViewModel", "恢复训练: sessionId=${session.id}")
+            } catch (e: Exception) {
+                android.util.Log.e("ExecutePlanViewModel", "恢复训练失败", e)
+            }
+        }
+    }
+
+    /**
+     * 用户放弃恢复，标记为已取消
+     */
+    fun declineRecovery() {
+        val session = _pendingRecoverySession.value ?: return
+        viewModelScope.launch {
+            try {
+                // ✅ 标记为已取消
+                trainingRepository.cancelSession(session.id)
+
+                _pendingRecoverySession.value = null
+                _showRecoveryDialog.value = false
+
+                android.util.Log.d("ExecutePlanViewModel", "放弃恢复，标记为已取消: sessionId=${session.id}")
+            } catch (e: Exception) {
+                android.util.Log.e("ExecutePlanViewModel", "标记取消失败", e)
+            }
+        }
+    }
+
+    /**
+     * 恢复计时器
+     */
+    private fun restoreTimer(startTime: Long) {
+        val elapsed = (System.currentTimeMillis() - startTime) / 1000
+        _elapsedTime.value = elapsed
+        startTimer()
+    }
+
+    /**
+     * 清除跳转信号
+     */
+    fun clearNavigationSignal() {
+        _shouldNavigateToResult.value = null
+        android.util.Log.d("ExecutePlanViewModel", "清除跳转信号")
     }
 
     // ============================================================

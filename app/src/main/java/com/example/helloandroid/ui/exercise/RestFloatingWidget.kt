@@ -44,20 +44,18 @@ fun RestFloatingWidget(
     viewModel: ExecutePlanViewModel,
     onResume: () -> Unit
 ) {
-    // ✅ 从 ViewModel 获取保存的位置
-    val offsetX by viewModel.floatingOffsetX.collectAsStateWithLifecycle()
-    val offsetY by viewModel.floatingOffsetY.collectAsStateWithLifecycle()
-
-    var screenWidth by remember { mutableStateOf(0f) }
-    var screenHeight by remember { mutableStateOf(0f) }
     var widgetSize by remember { mutableStateOf(0f) }
 
     // ✅ 用于取消涟漪效果的 InteractionSource
     val interactionSource = remember { MutableInteractionSource() }
     val density = LocalDensity.current
 
-    // ✅ 自定义位置提供者
-    val positionProvider = remember(offsetX, offsetY) {
+    // ✅ 固定初始位置（从右下角偏移）
+    val fixedOffsetX = 16.dp    // 距右侧 16dp
+    val fixedOffsetY = 200.dp   // 距底部 200dp
+
+    // ✅ 固定位置提供者
+    val positionProvider = remember {
         object : PopupPositionProvider {
             override fun calculatePosition(
                 anchorBounds: IntRect,
@@ -65,10 +63,11 @@ fun RestFloatingWidget(
                 layoutDirection: LayoutDirection,
                 popupContentSize: IntSize
             ): IntOffset {
-                // ✅ 计算位置：右下角 + 偏移
-                val paddingPx = with(density) { 16.dp.toPx() }
-                val x = (windowSize.width - popupContentSize.width - paddingPx - offsetX).roundToInt()
-                val y = (windowSize.height - popupContentSize.height - paddingPx - offsetY).roundToInt()
+                val offsetXPx = with(density) { fixedOffsetX.toPx() }
+                val offsetYPx = with(density) { fixedOffsetY.toPx() }
+
+                val x = (windowSize.width - popupContentSize.width - offsetXPx).roundToInt()
+                val y = (windowSize.height - popupContentSize.height - offsetYPx).roundToInt()
                 return IntOffset(x, y)
             }
         }
@@ -97,29 +96,6 @@ fun RestFloatingWidget(
                     shape = CircleShape,
                     clip = false
                 )
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-
-                            // ✅ 所有值都是像素单位
-                            val paddingPx = with(density) { 16.dp.toPx() }
-                            val maxOffsetX = screenWidth - widgetSize - paddingPx
-                            val maxOffsetY = screenHeight - widgetSize - paddingPx
-
-                            // ✅ 防止边界值无效
-                            val safeMaxX = if (maxOffsetX > 0) maxOffsetX else 0f
-                            val safeMaxY = if (maxOffsetY > 0) maxOffsetY else 0f
-
-                            val newX = offsetX - dragAmount.x
-                            val newY = offsetY - dragAmount.y
-                            val clampedX = newX.coerceIn(0f, safeMaxX)
-                            val clampedY = newY.coerceIn(0f, safeMaxY)
-
-                            viewModel.updateFloatingPosition(clampedX, clampedY)
-                        }
-                    )
-                }
                 // ✅ 使用 interactionSource 并设置 indication = null 取消涟漪效果
                 .clickable(
                     interactionSource = interactionSource,

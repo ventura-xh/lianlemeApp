@@ -23,6 +23,10 @@ interface TrainingSessionDao {
     @Query("DELETE FROM training_sessions")
     suspend fun deleteAll()
 
+    // ✅ 清理长时间未完成的训练
+    @Query("DELETE FROM training_sessions WHERE status = 0 AND startTime < :threshold")
+    suspend fun deleteStaleActiveSessions(threshold: Long)
+
     // ========== 改 ==========
     @Update
     suspend fun update(session: TrainingSessionEntity)

@@ -55,6 +55,7 @@ import com.example.helloandroid.navigation.Screen
 import com.example.helloandroid.navigation.bottomNavItems
 import com.example.helloandroid.service.TrainingTimerService
 import com.example.helloandroid.ui.common.InAppTimerWidget
+import com.example.helloandroid.ui.common.RecoveryDialog
 import com.example.helloandroid.ui.theme.HelloAndroidTheme
 import com.example.helloandroid.utils.ThemePreferences
 import com.example.helloandroid.utils.ThemePreferences.isDarkTheme
@@ -151,8 +152,17 @@ fun MainScreen(
     val isTrainingActive = TrainingStateManager.isTrainingActive
     val isOnExecutePlanPage = TrainingStateManager.isOnExecutePlanPage
 
+    // ✅ 恢复训练相关状态
+    val showRecoveryDialog by executePlanViewModel.showRecoveryDialog.collectAsStateWithLifecycle()
+    val pendingRecoverySession by executePlanViewModel.pendingRecoverySession.collectAsStateWithLifecycle()
+
     // ✅ 训练计时时间（从服务获取）
     var elapsedTime by remember { mutableStateOf(0L) }
+
+    // ✅ App 启动时检查未完成的训练
+    LaunchedEffect(Unit) {
+        executePlanViewModel.checkActiveSession()
+    }
 
     // ✅ 监听服务时间
     LaunchedEffect(isTrainingActive) {
@@ -214,6 +224,26 @@ fun MainScreen(
                     }
                 )
             }
+        }
+
+        // ✅ 恢复确认对话框
+        if (showRecoveryDialog && pendingRecoverySession != null) {
+            RecoveryDialog(
+                session = pendingRecoverySession!!,
+                onRecover = {
+                    // ✅ 用户选择恢复
+                    executePlanViewModel.confirmRecovery()
+                    // 跳转到运动页面
+                    val planId = pendingRecoverySession!!.planId
+                    navController.navigate(
+                        Screen.ExecutePlan.pass(planId)
+                    )
+                },
+                onDecline = {
+                    // ✅ 用户选择不恢复，标记为已取消
+                    executePlanViewModel.declineRecovery()
+                }
+            )
         }
     }
 }

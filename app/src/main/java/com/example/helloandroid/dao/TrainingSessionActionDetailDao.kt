@@ -37,6 +37,20 @@ interface TrainingSessionActionDetailDao {
     @Query("UPDATE training_session_action_details SET weight = :weight, reps = :reps WHERE id = :detailId")
     suspend fun updateWeightAndReps(detailId: Long, weight: Double, reps: Int)
 
+    @Query("""
+        UPDATE training_session_action_details 
+        SET isCompleted = :isCompleted, weight = :weight, reps = :reps, completedAt = :completedAt
+        WHERE sessionActionId = :sessionActionId AND groupIndex = :groupIndex
+    """)
+    suspend fun updateGroupByIndex(
+        sessionActionId: Long,
+        groupIndex: Int,
+        isCompleted: Boolean,
+        weight: Double,
+        reps: Int,
+        completedAt: Long = System.currentTimeMillis()
+    )
+
     // ========== 查 ==========
     @Query("SELECT * FROM training_session_action_details WHERE id = :detailId")
     suspend fun getDetailById(detailId: Long): TrainingSessionActionDetailEntity?
