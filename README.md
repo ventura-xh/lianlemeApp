@@ -1,10 +1,10 @@
 
+# 练了么(LianlemeApp)
 
-# 炼乐么 - 健身助手 (LianlemeApp)
+基于 Kotlin + Jetpack Compose 构建的Android健身辅助应用。
+完全vibe coding
 
-炼乐么是一款基于 Kotlin + Jetpack Compose 构建的现代化 Android 健身辅助应用。
-
-## 🏋️ 核心功能
+## 核心功能
 
 ### 1. 训练计划管理
 *   **计划制定**：创建自定义训练计划，支持添加动作、设置组数、重量、次数。
@@ -29,36 +29,6 @@
 *   **体脂计算器**：内置美军方三点头和七点法体脂计算公式，辅助评估身体成分。
 *   **RM 计算器**：输入重量和次数，快速估算 1RM (一次最大重量)，并生成常用次数对照表。
 
-### 5. 其他特性
-*   **数据持久化**：使用 Room 数据库存储所有训练数据、本地动作库和用户信息。
-*   **深色模式**：支持跟随系统设置或手动切换深色/浅色主题。
-*   **结果分享**：训练结束后可生成训练结果图片，保存至相册。
-
-## 🛠 技术栈
-
-*   **UI 框架**: [Jetpack Compose](https://developer.android.com/jetpack/compose) - 声明式 UI 构建。
-*   **架构模式**: MVVM (Model-View-ViewModel)。
-*   **数据库**: [Room](https://developer.android.com/training/data-storage/room) - SQLite 抽象层，类型安全的数据持久化。
-*   **导航**: [Jetpack Navigation](https://developer.android.com/guide/navigation) - 导航组件支持。
-*   **异步处理**: Kotlin Coroutines & Flow。
-*   **依赖注入**: 手动进行（ViewModel 需要 DAO/Repository 实例）。
-
-## 📁 项目结构概览
-
-*   `dao/`: 数据访问对象 (DAO)，定义 Room 数据库操作。
-*   `entity/`: 数据库实体类 (Entity)。
-*   `repository/`: 仓库层，封装数据逻辑。
-*   `viewmodel/`: ViewModels，管理 UI 状态。
-*   `ui/`:
-    *   `actionlib/`: 动作库页面。
-    *   `calendar/`: 日历与统计报表页面。
-    *   `exercise/`: 训练执行相关页面（执行、准备、结果）。
-    *   `plan/`: 计划管理页面（创建、编辑、列表）。
-    *   `profile/`: 个人中心、身体数据、计算器等页面。
-    *   `common/`: 通用 UI 组件。
-*   `service/`: 前台服务，用于后台计时和悬浮窗。
-*   `utils/`: 工具类（体脂计算、RM 计算、Bitmap 保存等）。
-
 ## 🚀 快速开始
 
 ### 环境要求
@@ -77,5 +47,3 @@
 本项目遵循 Apache License 2.0。
 
 ---
-
-*炼乐么，助你科学训练，乐享健身！*
