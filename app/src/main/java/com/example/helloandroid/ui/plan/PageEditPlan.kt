@@ -213,7 +213,7 @@ fun PageEditPlan(
                 )
                 Button(
                     onClick = {
-                        navController.navigate(Screen.ActionLibSelect.route)
+                        navController.navigate(Screen.ActionLibSelectForPlan.route)
                     },
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,

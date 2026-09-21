@@ -199,7 +199,7 @@ fun PageCreatePlan(
                 )
                 Button(
                     onClick = {
-                        navController.navigate(Screen.ActionLibSelect.route)
+                        navController.navigate(Screen.ActionLibSelectForPlan.route)
                     }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "添加动作")

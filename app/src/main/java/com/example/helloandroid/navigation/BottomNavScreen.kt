@@ -5,7 +5,6 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomNavScreen(val route: String, val label: String, val icon: ImageVector, val isCenterSpecial: Boolean = false) {
@@ -28,7 +27,11 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
     // -----------------------------------------------------------------------------------------
     // action ‘动作’页面
     data object ActionLib : Screen("action_lib")
-    data object ActionLibSelect : Screen("action_lib_select")
+    data object ActionLibSelectForPlan : Screen("action_lib_select_for_plan")
+    data object ActionLibSelectForTraining : Screen(
+        route = "action_lib_select_for_training",
+        hideBottomBar = true
+    )
 
     // -----------------------------------------------------------------------------------------
     // exercise ‘运动’页面
@@ -103,7 +106,7 @@ sealed class Screen(val route: String, val hideBottomBar: Boolean = false) {
             EditPlan,
             // actionLib
             ActionLib,
-            ActionLibSelect,
+            ActionLibSelectForPlan,
             // exercise
             ExecutePlan,
             ExercisePrepare,

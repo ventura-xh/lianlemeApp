@@ -5,6 +5,7 @@ import com.example.helloandroid.dao.PlanFullDao
 import com.example.helloandroid.dao.TrainingSessionActionDao
 import com.example.helloandroid.dao.TrainingSessionActionDetailDao
 import com.example.helloandroid.dao.TrainingSessionDao
+import com.example.helloandroid.entity.ActionLibEntity
 import com.example.helloandroid.entity.TrainingSessionActionDetailEntity
 import com.example.helloandroid.entity.TrainingSessionActionEntity
 import com.example.helloandroid.entity.TrainingSessionEntity
@@ -192,6 +193,38 @@ class TrainingRepository(
                         detailDao.deleteById(detail.id)
                     }
                 }
+            } else {
+                // ✅ 7. 新增的动作，插入数据库
+                val sessionActionId = actionDao.insert(
+                    TrainingSessionActionEntity(
+                        sessionId = sessionId,
+                        actionId = action.actionId,
+                        actionName = action.actionName,
+                        sortOrder = sortOrder,
+                        isCompleted = action.isCompleted
+                    )
+                )
+
+                action.groups.forEach { group ->
+                    detailDao.insert(
+                        TrainingSessionActionDetailEntity(
+                            sessionActionId = sessionActionId,
+                            groupIndex = group.groupIndex,
+                            weight = group.weight,
+                            reps = group.reps,
+                            isCompleted = group.isCompleted,
+                            completedAt = group.completedAt
+                        )
+                    )
+                }
+            }
+        }
+
+        // ✅ 8. 删除不再存在的动作（用户移除的动作）
+        val validActionIds = actions.map { it.actionId }
+        existingActions.forEach { existing ->
+            if (existing.actionId !in validActionIds) {
+                actionDao.deleteById(existing.id)
             }
         }
     }
@@ -277,6 +310,19 @@ class TrainingRepository(
         )
     }
 
+    /**
+     * 用训练会话的数据更新计划
+     * 将训练中的动作和组数据同步到计划模板
+     */
+    @Transaction
+    suspend fun syncPlanFromSession(
+        planId: Long,
+        actions: List<TrainingAction>
+    ) {
+        // ✅ 直接使用已有的 planRepository
+        planRepository.updatePlanFromSession(planId, actions)
+    }
+
     // ============================================================
     // 5. 查询
     // ============================================================
@@ -326,6 +372,17 @@ class TrainingRepository(
             planRepository.getMuscleNamesForAction(actionId)
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    /**
+     * 根据 ID 获取动作信息
+     */
+    suspend fun getActionById(actionId: Long): ActionLibEntity? {
+        return try {
+            planRepository.getActionById(actionId)
+        } catch (e: Exception) {
+            null
         }
     }
 

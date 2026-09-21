@@ -1,12 +1,14 @@
 package com.example.helloandroid.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.helloandroid.FitApplication
 import com.example.helloandroid.entity.TrainingSessionEntity
+import com.example.helloandroid.entity.model.TrainingAction
 import com.example.helloandroid.entity.model.TrainingGroup
 import com.example.helloandroid.entity.model.TrainingSession
 import com.example.helloandroid.manager.TrainingStateManager
@@ -35,6 +37,13 @@ class ExecutePlanViewModel(
     private val _currentSessionId  = MutableStateFlow<Long?>(null)
     val currentSessionId: StateFlow<Long?> = _currentSessionId .asStateFlow()
 
+    // ✅ 同步计划对话框状态
+    private val _showSyncPlanDialog = MutableStateFlow(false)
+    val showSyncPlanDialog: StateFlow<Boolean> = _showSyncPlanDialog.asStateFlow()
+
+    // ✅ 待保存的会话ID
+    private val _pendingFinishSessionId = MutableStateFlow<Long?>(null)
+
     // ✅ 用于跳转的信号（只在校验通过时设置）
     private val _shouldNavigateToResult = MutableStateFlow<Long?>(null)
     val shouldNavigateToResult: StateFlow<Long?> = _shouldNavigateToResult.asStateFlow()
@@ -46,7 +55,6 @@ class ExecutePlanViewModel(
     // ✅ 是否需要显示恢复确认对话框
     private val _showRecoveryDialog = MutableStateFlow(false)
     val showRecoveryDialog: StateFlow<Boolean> = _showRecoveryDialog.asStateFlow()
-
 
     // ✅ 当前展开的动作卡片索引
     private val _currentActionIndex = MutableStateFlow(0)
@@ -370,6 +378,50 @@ class ExecutePlanViewModel(
         _refreshTrigger.value++
     }
 
+    /**
+     * 批量添加动作到当前训练
+     */
+    fun addActionsToSession(actionIds: List<Long>) {
+        viewModelScope.launch {
+            val session = _session.value ?: return@launch
+            val addedActions = mutableListOf<String>()
+
+            actionIds.forEach { actionId ->
+                // ✅ 检查是否已存在
+                if (session.actions.any { it.actionId == actionId }) {
+                    android.util.Log.d("ExecutePlanViewModel", "动作已存在: $actionId")
+                    return@forEach
+                }
+
+                // ✅ 从数据库获取动作信息
+                val action = trainingRepository.getActionById(actionId) ?: return@forEach
+
+                // ✅ 创建新动作（默认一组）
+                val newAction = TrainingAction(
+                    actionId = action.id,
+                    actionName = action.name,
+                    groups = mutableListOf(
+                        TrainingGroup(
+                            groupIndex = 0,
+                            weight = 0.0,
+                            reps = 0,
+                            isCompleted = false
+                        )
+                    ),
+                    isCompleted = false
+                )
+
+                session.actions.add(newAction)
+                addedActions.add(action.name)
+            }
+
+            if (addedActions.isNotEmpty()) {
+                _session.value = session.copy()
+                _refreshTrigger.value++
+                android.util.Log.d("ExecutePlanViewModel", "添加动作: ${addedActions.joinToString()}")
+            }
+        }
+    }
     // ============================================================
     // 组间歇倒计时（使用 Service）
     // ============================================================
@@ -449,24 +501,29 @@ class ExecutePlanViewModel(
 
         val sessionId = _currentSessionId.value
         if (sessionId == null) {
-            android.util.Log.e("ExecutePlanViewModel", "没有正在进行的训练")
+            Log.e("ExecutePlanViewModel", "没有正在进行的训练")
             return
         }
 
         val currentSession = _session.value
         if (currentSession == null) {
-            android.util.Log.e("ExecutePlanViewModel", "训练数据为空")
+            Log.e("ExecutePlanViewModel", "训练数据为空")
             return
         }
 
         viewModelScope.launch {
-            trainingRepository.finishSessionWithDetails(sessionId, currentSession.actions)
+            try {
+                // 保存训练数据到数据库
+                trainingRepository.finishSessionWithDetails(sessionId, currentSession.actions)
 
-            _session.value = null
-            _currentSessionId.value = null
+                // 保存会话ID，用于后续同步
+                _pendingFinishSessionId.value = sessionId
 
-            // ✅ 4. 最后设置跳转信号（确保前面都完成）
-            _shouldNavigateToResult.value = sessionId
+                // 显示同步计划对话框
+                _showSyncPlanDialog.value = true
+            } catch (e: Exception) {
+                Log.e("ExecutePlanViewModel", "完成训练失败", e)
+            }
         }
     }
 
@@ -506,12 +563,64 @@ class ExecutePlanViewModel(
                     // ✅ 有待恢复的训练，显示确认对话框
                     _pendingRecoverySession.value = activeSession
                     _showRecoveryDialog.value = true
-                    android.util.Log.d("ExecutePlanViewModel", "发现未完成训练: sessionId=${activeSession.id}")
+                    Log.d("ExecutePlanViewModel", "发现未完成训练: sessionId=${activeSession.id}")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ExecutePlanViewModel", "检查训练失败", e)
+                Log.e("ExecutePlanViewModel", "检查训练失败", e)
             }
         }
+    }
+
+    /**
+     * 用户选择同步计划
+     */
+    fun syncPlan() {
+        viewModelScope.launch {
+            try {
+                val session = _session.value
+                val sessionId = _pendingFinishSessionId.value
+
+                if (session != null && sessionId != null) {
+                    // ✅ 用训练数据更新计划
+                    trainingRepository.syncPlanFromSession(session.planId, session.actions)
+                    Log.d("ExecutePlanViewModel", "同步计划: planId=${session.planId}")
+                }
+
+                // ✅ 关闭对话框，跳转结果页面
+                _showSyncPlanDialog.value = false
+                _currentSessionId.value = sessionId
+
+                // ✅ 清空当前训练
+                _session.value = null
+                _currentSessionId.value = null
+                _pendingFinishSessionId.value = null
+
+                // 最后设置跳转信号（确保前面都完成）
+                _shouldNavigateToResult.value = sessionId
+            } catch (e: Exception) {
+                Log.e("ExecutePlanViewModel", "同步计划失败", e)
+            }
+        }
+    }
+
+    /**
+     * 用户选择不同步计划
+     */
+    fun skipSyncPlan() {
+        val sessionId = _pendingFinishSessionId.value
+
+        // ✅ 关闭对话框，跳转结果页面
+        _showSyncPlanDialog.value = false
+        _currentSessionId.value = sessionId
+
+        // ✅ 清空当前训练
+        _session.value = null
+        _currentSessionId.value = null
+        _pendingFinishSessionId.value = null
+
+        // 最后设置跳转信号（确保前面都完成）
+        _shouldNavigateToResult.value = sessionId
+        Log.d("ExecutePlanViewModel", "跳过同步计划")
     }
 
     /**

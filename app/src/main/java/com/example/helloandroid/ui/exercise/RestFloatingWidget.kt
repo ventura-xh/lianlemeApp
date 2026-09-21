@@ -52,7 +52,7 @@ fun RestFloatingWidget(
 
     // ✅ 固定初始位置（从右下角偏移）
     val fixedOffsetX = 16.dp    // 距右侧 16dp
-    val fixedOffsetY = 200.dp   // 距底部 200dp
+    val fixedOffsetY = 100.dp   // 距底部 200dp
 
     // ✅ 固定位置提供者
     val positionProvider = remember {

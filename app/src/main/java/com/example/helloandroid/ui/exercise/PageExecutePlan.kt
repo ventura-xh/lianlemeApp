@@ -59,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -76,6 +77,7 @@ import com.example.helloandroid.service.TrainingTimerService
 import com.example.helloandroid.ui.common.NumberInputBottomSheet
 import com.example.helloandroid.viewmodel.ExecutePlanViewModel
 import com.example.helloandroid.manager.TrainingStateManager
+import com.example.helloandroid.ui.execute.SyncPlanDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,6 +120,9 @@ fun PageExecutePlan(
 
     // ✅ 当 refreshTrigger 变化时，什么都不做，但会触发重组
     val refreshKey = refreshTrigger
+
+    // ✅ 同步计划对话框状态
+    val showSyncPlanDialog by viewModel.showSyncPlanDialog.collectAsStateWithLifecycle()
 
     // ✅ 跳转信号
     val shouldNavigateToResult by viewModel.shouldNavigateToResult.collectAsStateWithLifecycle()
@@ -324,9 +329,65 @@ fun PageExecutePlan(
                             }
                         )
                     }
+
+                    item {
+                        Button(
+                            onClick = {
+                                navController.navigate(Screen.ActionLibSelectForTraining.route)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "添加动作",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "添加动作",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // ✅ 监听多选结果
+    LaunchedEffect(Unit) {
+        navController.currentBackStackEntry?.savedStateHandle
+            ?.getLiveData<String>("selected_actions_for_training")
+            ?.observeForever { idsString ->
+                idsString?.let {
+                    val actionIds = it.split(",").mapNotNull { id -> id.toLongOrNull() }
+                    if (actionIds.isNotEmpty()) {
+                        viewModel.addActionsToSession(actionIds)
+                    }
+                    navController.currentBackStackEntry?.savedStateHandle
+                        ?.remove<String>("selected_actions_for_training")
+                }
+            }
+    }
+
+    // ✅ 同步计划对话框
+    if (showSyncPlanDialog) {
+        SyncPlanDialog(
+            planName = finalPlanName,
+            onSync = {
+                viewModel.syncPlan()
+            },
+            onSkip = {
+                viewModel.skipSyncPlan()
+            }
+        )
     }
 
     // ✅ 数字输入对话框

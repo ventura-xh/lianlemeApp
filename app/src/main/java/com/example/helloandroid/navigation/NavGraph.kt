@@ -64,7 +64,7 @@ fun AppNavGraph(
         // 动作库
         composable(Screen.ActionLib.route) { PageActionLib() }
         // 选择动作
-        composable(Screen.ActionLibSelect.route) {
+        composable(Screen.ActionLibSelectForPlan.route) {
             PageActionLib(
                 selectMode = true,
                 navController = navController,
@@ -72,6 +72,19 @@ fun AppNavGraph(
                     val idsString = actionIds.joinToString(",")
                     navController.previousBackStackEntry?.savedStateHandle?.set(
                         "selected_action_ids",
+                        idsString
+                    )
+                }
+            )
+        }
+        composable(Screen.ActionLibSelectForTraining.route) {
+            PageActionLib(
+                selectMode = true,
+                navController = navController,
+                onActionsSelected = { actionIds ->
+                    val idsString = actionIds.joinToString(",")
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        "selected_actions_for_training",
                         idsString
                     )
                 }

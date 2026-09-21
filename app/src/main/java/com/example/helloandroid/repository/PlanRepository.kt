@@ -2,6 +2,7 @@ package com.example.helloandroid.repository
 
 // repository/PlanRepository.kt
 
+import androidx.room.Transaction
 import com.example.helloandroid.dao.ActionDetailDao
 import com.example.helloandroid.dao.ActionLibDAO
 import com.example.helloandroid.dao.MuscleDao
@@ -9,9 +10,11 @@ import com.example.helloandroid.dao.PlanActionsDao
 import com.example.helloandroid.dao.PlanFullDao
 import com.example.helloandroid.dao.PlansDao
 import com.example.helloandroid.entity.ActionDetailEntity
+import com.example.helloandroid.entity.ActionLibEntity
 import com.example.helloandroid.entity.PlanActionsEntity
 import com.example.helloandroid.entity.PlansEntity
 import com.example.helloandroid.entity.model.PlanWithActionsAndDetails
+import com.example.helloandroid.entity.model.TrainingAction
 import com.example.helloandroid.ui.plan.PlanActionWithGroups
 import com.example.helloandroid.ui.plan.PlanDetail
 import kotlinx.coroutines.flow.Flow
@@ -121,11 +124,58 @@ class PlanRepository(
         }
     }
 
+    suspend fun getActionById(actionId: Long): ActionLibEntity? {
+        return try {
+            actionLibDAO.getById(actionId)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     // ========== 更新 ==========
     suspend fun updatePlanName(planId: Long, newName: String) {
         val plan = plansDao.getPlanById(planId)
         plan?.let {
             plansDao.update(it.copy(name = newName))
+        }
+    }
+
+    /**
+     * 用训练会话的数据更新计划
+     * 将训练中的动作和组数据同步到计划模板
+     */
+    @Transaction
+    suspend fun updatePlanFromSession(
+        planId: Long,
+        actions: List<TrainingAction>
+    ) {
+        // ✅ 1. 删除旧的动作和组
+        planActionsDao.deleteByPlanId(planId)
+        // 外键 CASCADE 会自动删除 action_details
+
+        // ✅ 2. 重新插入动作和组
+        actions.forEachIndexed { sortOrder, action ->
+            val planActionId = planActionsDao.insert(
+                PlanActionsEntity(
+                    planId = planId,
+                    actionId = action.actionId,
+                    sortOrder = sortOrder
+                )
+            )
+
+            action.groups.forEach { group ->
+                actionDetailsDao.insert(
+                    ActionDetailEntity(
+                        planActionId = planActionId,
+                        groupIndex = group.groupIndex.toLong(),
+                        weight = group.weight,
+                        reps = group.reps.toLong(),
+                        weightUnit = "kg",
+                        restSeconds = 60,
+                        isLeftRight = false
+                    )
+                )
+            }
         }
     }
 

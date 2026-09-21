@@ -3,6 +3,7 @@ package com.example.helloandroid.ui.exercise
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -38,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -213,17 +217,19 @@ fun PageExercisePrepare(
                             navController.currentBackStackEntry?.savedStateHandle?.set("planName", planName)
                             navController.navigate(Screen.ExecutePlan.pass(planId))
                         },
-                        modifier = Modifier
-                            .height(48.dp)
-                            .padding(end = 16.dp)
+                        modifier = Modifier.size(80.dp),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(0.dp),  // ✅ 移除内边距\
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF388E3C),
+                            contentColor = MaterialTheme.colorScheme.surface
+                        ),
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "开始训练",
-                            modifier = Modifier.size(20.dp)
+                        Text(
+                            text = "GO",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 30.sp
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("开始训练")
                     }
                 }
 
@@ -233,7 +239,11 @@ fun PageExercisePrepare(
                     modifier = Modifier
                         .height(48.dp)
                         .align(Alignment.CenterEnd)
-                        .padding(end = 16.dp)
+                        .padding(end = 16.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onSurface,
+                        contentColor = MaterialTheme.colorScheme.surface
+                    ),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
@@ -241,7 +251,7 @@ fun PageExercisePrepare(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("装备")
+                    Text("")
                 }
 
             }
@@ -269,7 +279,7 @@ fun ExercisePrepareActionCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = Color.Transparent
         )
     ) {
         Column(
