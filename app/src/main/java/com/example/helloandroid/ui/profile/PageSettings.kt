@@ -174,7 +174,7 @@ fun PageSettings(
                 SettingsClickItem(
                     icon = Icons.Default.Info,
                     title = "版本信息",
-                    subtitle = "v1.0.0",
+                    subtitle = "v0.1.5",
                     onClick = { /* TODO */ }
                 )
             }

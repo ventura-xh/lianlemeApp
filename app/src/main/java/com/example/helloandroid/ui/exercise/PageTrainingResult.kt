@@ -319,8 +319,7 @@ fun TrainingResultBottomBar(
 private suspend fun captureFromGraphicsLayer(graphicsLayer: GraphicsLayer): Bitmap? {
     return withContext(Dispatchers.Main) {
         try {
-            // toImageBitmap() 内部会使用 layer 录制的实际像素尺寸
-            // 无需外部传入 IntSize，避免了尺寸不匹配的问题
+
             graphicsLayer.toImageBitmap().asAndroidBitmap()
         } catch (e: Exception) {
             e.printStackTrace()
