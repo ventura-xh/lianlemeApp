@@ -638,6 +638,9 @@ class ExecutePlanViewModel(
             try {
                 skipRest()
 
+                TrainingStateManager.startTraining(session.planId, session.planName)
+                TrainingTimerService.isTrainingActive = true
+
                 _currentSessionId.value = session.id
                 val sessionDetail = trainingRepository.getSessionWithDetails(session.id)
 
@@ -685,6 +688,7 @@ class ExecutePlanViewModel(
     private fun restoreTimer(startTime: Long) {
         val elapsed = (System.currentTimeMillis() - startTime) / 1000
         _elapsedTime.value = elapsed
+        TrainingTimerService.setElapsedTime(elapsed)
         startTimer()
     }
 

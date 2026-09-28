@@ -1,5 +1,6 @@
 package com.example.helloandroid.ui.profile
 
+import android.content.pm.PackageManager
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,6 +67,17 @@ fun PageSettings(
 
     // ✅ 当前主题状态
     var currentTheme by remember { mutableStateOf(ThemePreferences.darkModeState) }
+
+    // ✅ 获取版本号
+    val versionName = remember {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            packageInfo.versionName ?: "未知"
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+            "未知"
+        }
+    }
 
     // ✅ ActionLibViewModel
     val actionLibViewModel: ActionLibViewModel = viewModel(
@@ -174,7 +186,8 @@ fun PageSettings(
                 SettingsClickItem(
                     icon = Icons.Default.Info,
                     title = "版本信息",
-                    subtitle = "v0.1.5",
+                    subtitle = "v$versionName",
+                    enableClicked = false,
                     onClick = { /* TODO */ }
                 )
             }
@@ -324,13 +337,17 @@ fun SettingsClickItem(
     icon: ImageVector,
     title: String,
     subtitle: String,
+    enableClicked: Boolean = true,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { onClick() },
+            .clickable(
+                enabled = enableClicked,
+                onClick = onClick
+            ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
@@ -382,11 +399,13 @@ fun SettingsClickItem(
                 )
             }
 
-            Text(
-                text = "›",
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (enableClicked) {
+                Text(
+                    text = "›",
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

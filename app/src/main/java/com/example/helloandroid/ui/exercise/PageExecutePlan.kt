@@ -452,7 +452,7 @@ fun PageExecutePlan(
 
     // ✅ 倒计时悬浮窗
     if (showRestFloating) {
-        RestFloatingWidget(
+        DraggableRestFloatingWidget(
             remainingSeconds = remainingSeconds,
             viewModel = viewModel,
             onResume = {

@@ -5,8 +5,11 @@ package com.example.helloandroid.ui.common
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,23 +29,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupPositionProvider
-import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
 
 /**
- * App 内悬浮计时器
+ * App 内悬浮计时器（可拖动）
  * 在训练进行中但不在运动页面时显示
  */
 @Composable
@@ -50,58 +47,61 @@ fun InAppTimerWidget(
     elapsedTime: Long,
     onClick: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
 
-    // 悬浮窗位置
-    var widgetSize by remember { mutableStateOf(0f) }
+    // ✅ 悬浮窗尺寸（宽 × 高）
+    val widgetWidthPx = with(density) { 120.dp.toPx() }
+    val widgetHeightPx = with(density) { 40.dp.toPx() }
 
-    // ✅ 固定初始位置（从右下角偏移）
-    val fixedOffsetX = 16.dp    // 距右侧 16dp
-    val fixedOffsetY = 100.dp   // 距底部 200dp
+    // ✅ 屏幕尺寸（用于边界约束）
+    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
 
-    // ✅ 固定位置提供者
-    val positionProvider = remember {
-        object : PopupPositionProvider {
-            override fun calculatePosition(
-                anchorBounds: IntRect,
-                windowSize: IntSize,
-                layoutDirection: LayoutDirection,
-                popupContentSize: IntSize
-            ): IntOffset {
-                val offsetXPx = with(density) { fixedOffsetX.toPx() }
-                val offsetYPx = with(density) { fixedOffsetY.toPx() }
+    // ✅ 初始位置：距右侧 16dp，距底部 100dp
+    val initialX = screenWidthPx - widgetWidthPx - with(density) { 16.dp.toPx() }
+    val initialY = screenHeightPx - widgetHeightPx - with(density) { 200.dp.toPx() }
 
-                val x = (windowSize.width - popupContentSize.width - offsetXPx).roundToInt()
-                val y = (windowSize.height - popupContentSize.height - offsetYPx).roundToInt()
-                return IntOffset(x, y)
-            }
-        }
-    }
+    var offsetX by remember { mutableStateOf(initialX) }
+    var offsetY by remember { mutableStateOf(initialY) }
 
-    Popup(
-        popupPositionProvider = positionProvider,
-        onDismissRequest = {},
-        properties = PopupProperties(
-            focusable = false,
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        )
+    val interactionSource = remember { MutableInteractionSource() }
+
+    // ✅ 外层 Box 仅用于全屏定位和 zIndex，不添加任何手势，事件自然穿透
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(Float.MAX_VALUE)
     ) {
+        // ✅ 真正的交互区域仅限于 Surface 自身大小
         Surface(
             modifier = Modifier
-                .onGloballyPositioned { coordinates ->
-                    widgetSize = coordinates.size.width.toFloat()
-                }
+                .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
                 .shadow(
                     elevation = 8.dp,
                     shape = RoundedCornerShape(24.dp),
                     clip = false
                 )
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+
+                            // ✅ 边界约束：防止拖出屏幕
+                            val newX = (offsetX + dragAmount.x)
+                                .coerceIn(0f, screenWidthPx - widgetWidthPx)
+                            val newY = (offsetY + dragAmount.y)
+                                .coerceIn(0f, screenHeightPx - widgetHeightPx)
+                            offsetX = newX
+                            offsetY = newY
+                        },
+                        onDragEnd = {}
+                    )
+                }
                 .clickable(
                     interactionSource = interactionSource,
-                    indication = null
+                    indication = null  // 去掉水波纹，避免拖动时闪烁
                 ) {
                     onClick()
                 },

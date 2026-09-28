@@ -42,7 +42,7 @@ import kotlin.concurrent.Volatile
         ActionMuscleEntity::class,
         UserEntity::class
     ],
-    version = 9,  // 20260910,完善用户数据信息
+    version = DatabaseConstants.VERSION,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -61,24 +61,14 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        // ✅ 从版本 4 迁移到 5
-        private val MIGRATION_8_9 = object : Migration(8, 9) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // 添加 city 字段，默认值为空字符串
-                db.execSQL(
-                    "ALTER TABLE users ADD COLUMN city TEXT NOT NULL DEFAULT ''"
-                )
-            }
-        }
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "app_database.db"
+                    DatabaseConstants.NAME
                 )
-                .addMigrations(MIGRATION_8_9)
-//                .fallbackToDestructiveMigration(true)
+                .addMigrations(*Migrations.ALL)
                 .build()
                 INSTANCE = instance
                 instance

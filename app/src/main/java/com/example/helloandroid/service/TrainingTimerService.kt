@@ -154,6 +154,12 @@ class TrainingTimerService : Service() {
             _restTime.postValue(0)
         }
 
+        // ✅ 设置已用时间（恢复训练时使用）
+        fun setElapsedTime(time: Long) {
+            _elapsedTime.value = time
+            android.util.Log.d("TimerService", "设置已用时间: $time 秒")
+        }
+
         // ✅ 获取当前时间
         fun getCurrentElapsedTime(): Long {
             return _elapsedTime.value ?: 0L
