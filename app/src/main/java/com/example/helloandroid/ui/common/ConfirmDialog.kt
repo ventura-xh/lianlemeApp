@@ -17,8 +17,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.helloandroid.R
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -39,21 +41,23 @@ fun ConfirmDialog(
     showDialog: Boolean,
     title: String,
     message: String,
-    confirmText: String = "确认",
-    cancelText: String = "取消",
+    confirmText: String? = null,
+    cancelText: String? = null,
     countdownSeconds: Int = 3,
     isDestructive: Boolean = false,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     var countdown by remember { mutableStateOf(countdownSeconds) }
+    val resolvedConfirmText = confirmText ?: stringResource(R.string.common_confirm)
+    val resolvedCancelText = cancelText ?: stringResource(R.string.common_cancel)
 
     // ✅ 启动倒计时
     LaunchedEffect(showDialog) {
         if (showDialog) {
             countdown = countdownSeconds
             while (countdown > 0) {
-                delay(1000L)
+                delay(1000L.milliseconds)
                 countdown--
             }
         } else {
@@ -103,7 +107,7 @@ fun ConfirmDialog(
                         ButtonDefaults.buttonColors()
                     }
                 ) {
-                    Text(if (countdown > 0) "$confirmText (${countdown}s)" else confirmText)
+                    Text(if (countdown > 0) "$resolvedConfirmText (${countdown}s)" else resolvedConfirmText)
                 }
             },
             dismissButton = {
@@ -114,7 +118,7 @@ fun ConfirmDialog(
                     }
                     // ✅ 取消按钮始终可点击
                 ) {
-                    Text(cancelText)
+                    Text(resolvedCancelText)
                 }
             }
         )

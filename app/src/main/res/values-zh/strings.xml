@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Legacy keys (do not rename) -->
+    <string name="app_name">练了么</string>
+    <string name="plan">计划</string>
+    <string name="action">动作</string>
+    <string name="calendar">日程</string>
+    <string name="profile">我的</string>
+
+    <!-- Common -->
+    <string name="common_confirm">确认</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_delete">删除</string>
+    <string name="common_ok">确定</string>
+    <string name="common_add">添加</string>
+    <string name="common_clean">清除</string>
+    <string name="common_save">保存</string>
+    <string name="common_back">返回</string>
+    <string name="common_loading">加载中....</string>
+    <!-- ==================== 通用确认对话框 ==================== -->
+    <string name="common_countdown_hint">⏱️ %1$d秒后可确认</string>
+    <string name="common_confirm_with_countdown">%1$s (%2$ds)</string>
+    <string name="common_bullet_prefix">• %1$s</string>
+    <!-- ==================== 数字输入面板 ==================== -->
+    <string name="number_input_title">输入数字</string>
+    <string name="number_input_close_desc">关闭</string>
+    <string name="number_input_zero">0</string>
+    <string name="number_input_zero_dot">0.</string>
+    <string name="number_input_delete_key">⌫</string>
+    <string name="number_input_clear_key">清空</string>
+
+    <!-- Plan texts -->
+    <string name="plan_create_plan">创建计划</string>
+    <string name="plan_edit_plan">编辑计划</string>
+    <string name="plan_actions_selected_count">已选动作 (%1$d)</string>
+    <string name="plan_add_action">添加动作</string>
+    <string name="plan_training_plan">训练计划</string>
+    <string name="plan_empty">💪 还没有训练计划</string>
+    <string name="plan_training_plan_hint">点击右下角 ➕ 按钮创建你的第一个计划</string>
+    <string name="plan_hint_add_action">"💡 点击「添加动作」选择动作 "</string>
+    <string name="plan_detail_bottom_sheet_collapse">▲</string>
+    <string name="plan_detail_bottom_sheet_set">第%1$d组</string>
+    <string name="plan_detail_bottom_sheet_weight">重量：%1$f kg</string>
+    <string name="plan_detail_bottom_sheet_rep">次数：%1$d 次</string>
+
+    <!-- Action Card texts -->
+    <string name="execute_group_header_index">序号</string>
+    <plurals name="action_card_set">
+        <item quantity="other">(%1$d组)</item>
+    </plurals>
+    <string name="action_card_weight">重量(kg)</string>
+    <string name="action_card_reps">次数</string>
+    <plurals name="action_card_rep_unit">
+        <item quantity="other">%1$d 次</item>
+    </plurals>
+    <string name="action_card_new_set">➕ 新增一组</string>
+    <string name="action_card_tap_input">点击输入</string>
+    <string name="action_card_copy">复制组</string>
+    <string name="action_card_delete">删除组</string>
+    <string name="action_card_insert">插入组</string>
+
+    <!-- ActionLib texts -->
+    <string name="action_lib_drawer_header">💪 部位</string>
+    <string name="action_lib_drawer_expand">▼</string>
+    <string name="action_lib_drawer_collapse">▶</string>
+    <string name="action_lib_breadcrumb">%1$s / %2$s</string>
+    <string name="action_lib_category_all">%1$s (全部)</string>
+    <string name="action_lib_title_all">全部动作</string>
+    <string name="action_lib_action_count">共 %1$d 个动作</string>
+    <string name="action_lib_empty">💡 该分类下暂无动作</string>
+    <string name="action_lib_title">🏋️ 动作库</string>
+    <string name="action_lib_add_action">动作</string>
+    <string name="action_lib_select_title">选择动作</string>
+    <string name="action_lib_selected_count">已选 %1$d 个动作</string>
+    <string name="action_lib_confirm_desc">确认选择</string>
+    <string name="action_lib_item_arrow">›</string>
+    <string name="action_lib_add_dialog_title">➕ 添加自定义动作</string>
+    <string name="action_lib_field_name">动作名称</string>
+    <string name="action_lib_field_category">主分类（如：下肢、上肢）</string>
+    <string name="action_lib_field_muscles">目标肌肉（可多选）</string>
+    <string name="action_lib_field_muscle">目标肌肉</string>
+    <string name="action_lib_field_description">动作要领</string>
+    <string name="action_lib_field_tips">注意事项</string>
+    <string name="action_lib_field_preset">⭐️ 预设</string>
+
+    <!-- Exercise texts -->
+    <string name="execute_plan_progress">进度：%1$d %</string>
+    <string name="execute_plan_set">%1$d组</string>
+    <string name="execute_plan_add_action">添加动作</string>
+    <string name="execute_exit_title">取消训练？</string>
+    <string name="execute_exit_message">当前训练尚未完成，确定要取消吗？</string>
+    <string name="execute_exit_warning">⚠️ 取消后的训练记录将不会被保存</string>
+    <string name="execute_exit_confirm">确认取消</string>
+    <string name="execute_exit_continue">继续训练</string>
+    <string name="execute_plan_done">完成</string>
+    <string name="prepare_select_plan">选择计划</string>
+    <string name="prepare_switch_plan_desc">切换计划</string>
+    <string name="prepare_back_desc">返回</string>
+    <string name="prepare_empty">该计划暂无动作</string>
+    <string name="prepare_go">开始训练</string>
+    <string name="prepare_equipment_desc">装备</string>
+    <plurals name="prepare_action_group_count">
+        <item quantity="other">%1$d组</item>
+    </plurals>
+    <string name="prepare_group_index">第%1$d组</string>
+    <string name="prepare_group_weight">%1$skg</string>
+    <string name="prepare_group_rep">%1$s次</string>
+    <string name="prepare_error_plan_not_found">未找到该计划</string>
+    <string name="prepare_error_load_failed">加载失败</string>
+    <string name="result_title_complete">训练完成</string>
+    <string name="result_title_detail">训练详情</string>
+    <string name="result_back_desc">返回</string>
+    <string name="result_not_found">未找到训练记录</string>
+    <string name="result_overview_plan">📋 %1$s</string>
+    <string name="result_overview_duration">⏱️ 用时: %1$s</string>
+    <string name="result_overview_time">📅 %1$s</string>
+    <string name="result_overview_action_count">🏋️ 共 %1$d 个动作</string>
+    <string name="result_header_group">组数</string>
+    <string name="result_header_weight">重量</string>
+    <string name="result_header_rep">次数</string>
+    <string name="result_header_status">状态</string>
+    <string name="result_group_weight">%1$skg</string>
+    <string name="result_group_rep">%1$s次</string>
+    <string name="result_save_image">保存图片</string>
+    <string name="result_back">返回</string>
+    <string name="result_toast_saved">图片已保存到相册</string>
+    <string name="result_toast_save_failed">保存失败，请重试</string>
+    <string name="result_toast_capture_failed">截图失败，内容可能未加载完成</string>
+    <string name="result_toast_save_error">保存失败：%1$s</string>
+    <string name="plan_list_title">切换训练计划</string>
+    <string name="plan_list_empty">暂无训练计划</string>
+    <string name="plan_item_current_desc">当前计划</string>
+    <string name="rest_dialog_title">⏱️ 组间歇</string>
+    <string name="rest_dialog_finish">完成</string>
+    <string name="sync_plan_title">📋 同步到计划？</string>
+    <string name="sync_plan_saved">训练已完成并保存。</string>
+    <string name="sync_plan_message">是否将本次训练中的修改（动作、组数、重量、次数）同步到计划「%1$s」？</string>
+    <string name="sync_plan_warning">⚠️ 选择「同步」将覆盖计划的原始模板</string>
+    <string name="sync_plan_confirm">同步修改</string>
+    <string name="sync_plan_skip">仅保存记录</string>
+
+    <!-- Calendar texts -->
+
+    <!-- Profile texts -->
+
+
+</resources>

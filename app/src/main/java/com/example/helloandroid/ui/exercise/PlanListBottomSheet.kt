@@ -40,9 +40,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.helloandroid.R
 import com.example.helloandroid.entity.PlansEntity
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -174,7 +175,7 @@ fun PlanListBottomSheet(
 
                     // 标题
                     Text(
-                        text = "切换训练计划",
+                        text = stringResource(R.string.plan_list_title),
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -186,7 +187,7 @@ fun PlanListBottomSheet(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "暂无训练计划",
+                                text = stringResource(R.string.plan_list_empty),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -260,7 +261,7 @@ fun PlanItem(
             if (isSelected) {
                 Icon(
                     Icons.Default.Check,
-                    contentDescription = "当前计划",
+                    contentDescription = stringResource(R.string.plan_item_current_desc),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

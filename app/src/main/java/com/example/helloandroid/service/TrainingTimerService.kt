@@ -154,6 +154,7 @@ class TrainingTimerService : Service() {
             _restTime.postValue(0)
         }
 
+        // ❕❕❕只能在主线程中调用，否则会抛出错误❕❕❕
         // ✅ 设置已用时间（恢复训练时使用）
         fun setElapsedTime(time: Long) {
             _elapsedTime.value = time
@@ -509,17 +510,15 @@ class TrainingTimerService : Service() {
 
     private fun createNotification(): Notification {
         val channelId = "training_channel"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "训练计时器",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                setShowBadge(false)
-            }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            channelId,
+            "训练计时器",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            setShowBadge(false)
         }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
 
         val currentTime = _elapsedTime.value ?: 0L
         return NotificationCompat.Builder(this, channelId)

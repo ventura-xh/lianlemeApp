@@ -1,3 +1,148 @@
 <resources>
-    <string name="app_name">helloAndroid</string>
+    <!-- Legacy keys (do not rename) -->
+    <string name="app_name">lianleme</string>
+    <string name="plan">Plan</string>
+    <string name="action">Action</string>
+    <string name="calendar">Calendar</string>
+    <string name="profile">Profile</string>
+
+    <!-- Common -->
+    <string name="common_confirm">Confirm</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_ok">OK</string>
+    <string name="common_add">Add</string>
+    <string name="common_clean">Clear</string>
+    <string name="common_save">Save</string>
+    <string name="common_back">Back</string>
+    <string name="common_loading">Loading....</string>
+    <!-- CommonUI texts -->
+    <string name="common_countdown_hint">⏱️ You can confirm in %1$d s</string>
+    <string name="common_confirm_with_countdown">%1$s (%2$ds)</string>
+    <string name="common_bullet_prefix">• %1$s</string>
+    <string name="number_input_title">Enter Number</string>
+    <string name="number_input_close_desc">Close</string>
+    <string name="number_input_zero">0</string>
+    <string name="number_input_zero_dot">0.</string>
+    <string name="number_input_delete_key">⌫</string>
+    <string name="number_input_clear_key">Clear</string>
+
+    <!-- Plan texts -->
+    <string name="plan_create_plan">Create Plan</string>
+    <string name="plan_edit_plan">Edit Plan</string>
+    <string name="plan_actions_selected_count">Selected Action (%1$d)</string>
+    <string name="plan_add_action">Add Action</string>
+    <string name="plan_training_plan">Training Plans</string>
+    <string name="plan_empty">💪 No training plans yet</string>
+    <string name="plan_training_plan_hint">Tap the %1$s button in the bottom right to create your first plan</string>
+    <string name="plan_hint_add_action">💡 Tap Add Action to select actions</string>
+
+    <!-- Action Card texts -->
+    <string name="execute_group_header_index">No.</string>
+    <plurals name="action_card_set">
+        <item quantity="one">(%1$d set)</item>
+        <item quantity="other">(%1$d sets)</item>
+    </plurals>
+    <string name="action_card_weight">Weight (kg)</string>
+    <string name="action_card_reps">Reps</string>
+    <plurals name="action_card_rep_unit">
+        <item quantity="one">%1$d rep</item>
+        <item quantity="other">%1$d reps</item>
+    </plurals>
+    <string name="action_card_new_set">➕ Add Set</string>
+    <string name="action_card_tap_input">Tap to input</string>
+    <string name="action_card_copy">Copy Set</string>
+    <string name="action_card_delete">Insert Set</string>
+    <string name="action_card_insert">Delete Set</string>
+    <string name="plan_detail_bottom_sheet_collapse">▲</string>
+    <string name="plan_detail_bottom_sheet_set">Set %1$d</string>
+    <string name="plan_detail_bottom_sheet_weight">Weight: %1$f kg</string>
+    <string name="plan_detail_bottom_sheet_rep">Reps: %1$d</string>
+
+    <!-- Action texts -->
+    <string name="action_lib_drawer_header">💪 Body Part</string>
+    <string name="action_lib_drawer_expand">▼</string>
+    <string name="action_lib_drawer_collapse">▶</string>
+    <string name="action_lib_breadcrumb">%1$s / %2$s</string>
+    <string name="action_lib_category_all">%1$s (All)</string>
+    <string name="action_lib_title_all">All Exercises</string>
+    <string name="action_lib_action_count">%1$d exercises</string>
+    <string name="action_lib_empty">💡 No exercises in this category</string>
+    <string name="action_lib_title">🏋️ Exercise Library</string>
+    <string name="action_lib_add_action">Exercise</string>
+    <string name="action_lib_select_title">Select Exercises</string>
+    <string name="action_lib_selected_count">%1$d selected</string>
+    <string name="action_lib_confirm_desc">Confirm selection</string>
+    <string name="action_lib_item_arrow">›</string>
+    <string name="action_lib_add_dialog_title">➕ Add Custom Exercise</string>
+    <string name="action_lib_field_name">Exercise name</string>
+    <string name="action_lib_field_category">Category (e.g., Lower Body, Upper Body)</string>
+    <string name="action_lib_field_muscles">Target muscles (multi-select)</string>
+    <string name="action_lib_field_muscle">Target muscle</string>
+    <string name="action_lib_field_description">Instructions</string>
+    <string name="action_lib_field_tips">Tips &amp; Cautions</string>
+    <string name="action_lib_field_preset">⭐️ Preset</string>
+
+    <!-- Exercise texts -->
+    <string name="execute_plan_progress">Progress: %1$d%%</string>
+    <string name="execute_plan_set">%1$d sets</string>
+    <string name="execute_plan_add_action">Add Exercise</string>
+    <string name="execute_plan_done">Done</string>
+    <string name="execute_exit_title">Cancel Workout?</string>
+    <string name="execute_exit_message">This workout isn\'t finished yet. Are you sure you want to cancel?</string>
+    <string name="execute_exit_warning">⚠️ The workout record will not be saved</string>
+    <string name="execute_exit_confirm">Yes, Cancel</string>
+    <string name="execute_exit_continue">Keep Going</string>
+    <string name="prepare_select_plan">Select Plan</string>
+    <string name="prepare_switch_plan_desc">Switch plan</string>
+    <string name="prepare_back_desc">Back</string>
+    <string name="prepare_empty">No exercises in this plan</string>
+    <string name="prepare_go">GO</string>
+    <string name="prepare_equipment_desc">Equipment</string>
+    <plurals name="prepare_action_group_count">
+        <item quantity="one">%1$d set</item>
+        <item quantity="other">%1$d sets</item>
+    </plurals>
+    <string name="prepare_group_index">Set %1$d</string>
+    <string name="prepare_group_weight">%1$skg</string>
+    <string name="prepare_group_rep">%1$s reps</string>
+    <string name="prepare_error_plan_not_found">Plan not found</string>
+    <string name="prepare_error_load_failed">Failed to load</string>
+    <string name="result_title_complete">Workout Complete</string>
+    <string name="result_title_detail">Workout Details</string>
+    <string name="result_back_desc">Back</string>
+    <string name="result_not_found">Workout record not found</string>
+    <string name="result_overview_plan">📋 %1$s</string>
+    <string name="result_overview_duration">⏱️ Duration: %1$s</string>
+    <string name="result_overview_time">📅 %1$s</string>
+    <string name="result_overview_action_count">🏋️ %1$d exercises</string>
+    <string name="result_header_group">Set</string>
+    <string name="result_header_weight">Weight</string>
+    <string name="result_header_rep">Reps</string>
+    <string name="result_header_status">Status</string>
+    <string name="result_group_weight">%1$skg</string>
+    <string name="result_group_rep">%1$s reps</string>
+    <string name="result_save_image">Save Image</string>
+    <string name="result_back">Back</string>
+    <string name="result_toast_saved">Image saved to gallery</string>
+    <string name="result_toast_save_failed">Save failed, please try again</string>
+    <string name="result_toast_capture_failed">Screenshot failed, content may not be fully loaded</string>
+    <string name="result_toast_save_error">Save failed: %1$s</string>
+    <string name="plan_list_title">Switch Plan</string>
+    <string name="plan_list_empty">No plans yet</string>
+    <string name="plan_item_current_desc">Current plan</string>
+    <string name="rest_dialog_title">⏱️ Rest</string>
+    <string name="rest_dialog_finish">Done</string>
+    <string name="sync_plan_title">📋 Sync to Plan?</string>
+    <string name="sync_plan_saved">The workout has been completed and saved.</string>
+    <string name="sync_plan_message">Sync the changes from this workout (exercises, sets, weight, reps) to the plan \"%1$s\"?</string>
+    <string name="sync_plan_warning">⚠️ Selecting \"Sync\" will overwrite the plan\'s original template</string>
+    <string name="sync_plan_confirm">Sync Changes</string>
+    <string name="sync_plan_skip">Save Record Only</string>
+
+    <!-- Calendar texts -->
+
+    <!-- Profile texts -->
+
+
 </resources>

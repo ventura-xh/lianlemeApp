@@ -352,7 +352,7 @@ fun PermanentCategoryDrawer(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "└ $muscleName",
+                                text = muscleName,
                                 fontSize = 13.sp,
                                 fontWeight = if (selectedMuscle == muscleName) FontWeight.Bold else FontWeight.Normal,
                                 color = if (selectedMuscle == muscleName) {
