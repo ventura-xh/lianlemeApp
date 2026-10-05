@@ -19,6 +19,9 @@ class CalendarViewModel(
     private val _allSessions = MutableStateFlow<List<TrainingSessionEntity>>(emptyList())
     val allSessions: StateFlow<List<TrainingSessionEntity>> = _allSessions.asStateFlow()
 
+    private val _allFinishedSessions = MutableStateFlow<List<TrainingSessionEntity>>(emptyList())
+    val allFinishedSessions: StateFlow<List<TrainingSessionEntity>> = _allFinishedSessions.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -27,8 +30,11 @@ class CalendarViewModel(
             _isLoading.value = true
             try {
                 val sessions = trainingRepository.getAllSessionsOnce()
+                // 只查询已完成的训练
+                val finishedSessions = trainingRepository.getAllFinishedSessionsOnce()
                 // 按开始时间倒序排列（最新的在前）
                 _allSessions.value = sessions.sortedByDescending { it.startTime }
+                _allFinishedSessions.value = finishedSessions.sortedByDescending { it.startTime }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

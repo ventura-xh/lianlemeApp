@@ -63,6 +63,7 @@ fun PageStatistics(
     )
 ) {
     val allSessions by viewModel.allSessions.collectAsStateWithLifecycle()
+    val allFinishedSession by viewModel.allFinishedSessions.collectAsStateWithLifecycle()
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -104,7 +105,7 @@ fun PageStatistics(
                 .padding(horizontal = 16.dp)
         ) {
             // 统计概览
-            StatisticsOverview(sessions = allSessions)
+            StatisticsOverview(sessions = allSessions, finishedSession = allFinishedSession)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -158,11 +159,12 @@ fun PageStatistics(
 // ✅ 统计概览
 @Composable
 fun StatisticsOverview(
-    sessions: List<TrainingSessionEntity>
+    sessions: List<TrainingSessionEntity>,
+    finishedSession: List<TrainingSessionEntity>
 ) {
     val totalSessions = sessions.size
-    val totalDuration = sessions.sumOf { it.totalDuration }
-    val completedSessions = sessions.count { it.status == 1 }
+    val totalFinishedSessions = finishedSession.size
+    val totalFinishedDuration = finishedSession.sumOf { it.totalDuration }
 
     Row(
         modifier = Modifier
@@ -177,22 +179,18 @@ fun StatisticsOverview(
             label = "总次数",
             modifier = Modifier.weight(1f)
         )
+        // 总次数
+        StatItem(
+            icon = Icons.Default.CheckCircle,
+            value = "$totalFinishedSessions",
+            label = "总完成次数",
+            modifier = Modifier.weight(1f)
+        )
         // 总时长
         StatItem(
             icon = Icons.Default.Timer,
-            value = formatDuration(totalDuration),
-            label = "总时长",
-            modifier = Modifier.weight(1f)
-        )
-        // 完成率
-        StatItem(
-            icon = Icons.Default.FitnessCenter,
-            value = if (totalSessions > 0) {
-                "${(completedSessions.toFloat() / totalSessions * 100).toInt()}%"
-            } else {
-                "0%"
-            },
-            label = "完成率",
+            value = formatDuration(totalFinishedDuration),
+            label = "已完成时长",
             modifier = Modifier.weight(1f)
         )
     }

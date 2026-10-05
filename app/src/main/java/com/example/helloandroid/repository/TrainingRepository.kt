@@ -342,6 +342,12 @@ class TrainingRepository(
     }
 
     /**
+     * 获取所有训练历史（一次性查询）
+     */
+    suspend fun getAllFinishedSessionsOnce(): List<TrainingSessionEntity> {
+        return sessionDao.getSessionsByStatus(1)
+    }
+    /**
      * 获取训练会话详情（用于历史查看）
      */
     suspend fun getSessionWithDetails(sessionId: Long): TrainingSessionWithDetails? {

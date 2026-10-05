@@ -83,7 +83,7 @@ fun PageCalendar(
 
     var selectedDateSessions by remember { mutableStateOf<List<TrainingSessionEntity>?>(null) }
 
-    val allSessions by viewModel.allSessions.collectAsStateWithLifecycle()
+    val allSessions by viewModel.allFinishedSessions.collectAsStateWithLifecycle()
 
     // 滑动偏移量
     var dragOffset by remember { mutableStateOf(0f) }

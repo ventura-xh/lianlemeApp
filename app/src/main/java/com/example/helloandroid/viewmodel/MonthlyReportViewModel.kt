@@ -34,7 +34,7 @@ class MonthlyReportViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val allSessions = trainingRepository.getAllSessionsOnce()
+                val allSessions = trainingRepository.getAllFinishedSessionsOnce()
                 val monthlyData = generateMonthlyReport(allSessions)
                 _reportData.value = monthlyData
             } catch (e: Exception) {
