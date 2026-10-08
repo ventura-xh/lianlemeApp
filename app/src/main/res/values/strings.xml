@@ -87,6 +87,7 @@
     <string name="execute_plan_progress">Progress: %1$d%%</string>
     <string name="execute_plan_set">%1$d sets</string>
     <string name="execute_plan_add_action">Add Exercise</string>
+    <string name="execute_plan_add_action_desc">Add Exercise</string>
     <string name="execute_plan_done">Done</string>
     <string name="execute_exit_title">Cancel Workout?</string>
     <string name="execute_exit_message">This workout isn\'t finished yet. Are you sure you want to cancel?</string>
@@ -141,7 +142,8 @@
     <string name="sync_plan_skip">Save Record Only</string>
 
     <!-- Calendar texts -->
-
+    <string name="calendar_delete_title">Delete Workout Record?</string>
+    <string name="calendar_delete_message">Are you sure you want to delete the record \"%1$s\"?</string>
     <!-- Profile texts -->
 
 

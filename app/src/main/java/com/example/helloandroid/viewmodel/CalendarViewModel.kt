@@ -42,6 +42,12 @@ class CalendarViewModel(
         }
     }
 
+    fun deleteSession(sessionId: Long) {
+        viewModelScope.launch {
+            trainingRepository.deleteSessionById(sessionId)
+            loadAllSessions()
+        }
+    }
     companion object {
         val factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

@@ -393,6 +393,13 @@ class TrainingRepository(
     }
 
     /**
+     * 根据 ID 获取动作信息
+     */
+    suspend fun deleteSessionById(sessionId: Long) {
+        sessionDao.deleteById(sessionId)
+    }
+
+    /**
      * 清理超过24小时未完成的训练（避免脏数据）
      */
     suspend fun cleanupStaleSessions() {

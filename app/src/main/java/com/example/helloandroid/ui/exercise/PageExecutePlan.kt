@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -71,6 +73,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.example.helloandroid.R
 import com.example.helloandroid.entity.model.TrainingAction
 import com.example.helloandroid.entity.model.TrainingGroup
 import com.example.helloandroid.manager.TrainingStateManager
@@ -259,12 +262,12 @@ fun PageExecutePlan(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "进度: ${(progress * 100).toInt()}%",
+                    text = stringResource(R.string.execute_plan_progress, (progress * 100).toInt()),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "${session?.actions?.sumOf { it.groups.size } ?: 0} 组",
+                    text = stringResource(R.string.execute_plan_set, session?.actions?.sumOf { it.groups.size } ?: 0),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -291,7 +294,7 @@ fun PageExecutePlan(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("加载中...")
+                    Text(stringResource(R.string.common_loading))
                 }
             } else {
                 LazyColumn(
@@ -355,12 +358,12 @@ fun PageExecutePlan(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = "添加动作",
+                                contentDescription = stringResource(R.string.execute_plan_add_action_desc),
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "添加动作",
+                                text = stringResource(R.string.execute_plan_add_action),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -478,16 +481,16 @@ fun PageExecutePlan(
             onDismissRequest = { showExitDialog = false },
             title = {
                 Text(
-                    text = "取消训练？",
+                    text = stringResource(R.string.execute_exit_title),
                     style = MaterialTheme.typography.titleLarge
                 )
             },
             text = {
                 Column {
-                    Text("当前训练尚未完成，确定要取消吗？")
+                    Text(stringResource(R.string.execute_exit_message))
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "⚠️ 取消后的训练记录将不会被保存",
+                        text = stringResource(R.string.execute_exit_warning),
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -506,14 +509,14 @@ fun PageExecutePlan(
                         contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
-                    Text("确认取消")
+                    Text(stringResource(R.string.execute_exit_confirm))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showExitDialog = false }
                 ) {
-                    Text("继续训练")
+                    Text(stringResource(R.string.execute_exit_continue))
                 }
             }
         )
@@ -607,18 +610,41 @@ fun ExecuteActionCard(
     LaunchedEffect(isExpanded) {
         expanded = isExpanded
     }
+    // ✅ 三态判断
+    val isCurrent = isExpanded && !action.isCompleted   // 当前正在做
+    val isDone = action.isCompleted
+
+    // ✅ 容器色
+    val containerColor = when {
+        isCurrent -> MaterialTheme.colorScheme.primaryContainer
+        isDone -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surface
+    }
+
+    // ✅ 边框色（仅当前动作有）
+    val borderColor = if (isCurrent) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        Color.Transparent
+    }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (isCurrent) {
+                    Modifier.border(
+                        width = 2.dp,
+                        color = borderColor,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                } else Modifier
+            ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (action.isCompleted) 1.dp else 3.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = if (action.isCompleted) {
-                MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
+            containerColor = containerColor
         )
     ) {
         Column(
@@ -650,22 +676,27 @@ fun ExecuteActionCard(
                     Text(
                         text = action.actionName,
                         style = MaterialTheme.typography.titleMedium,
-                        color = if (action.isCompleted) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
+                        color = when {
+                            isCurrent -> MaterialTheme.colorScheme.primary
+                            isDone -> MaterialTheme.colorScheme.onSurfaceVariant
+                            else -> MaterialTheme.colorScheme.onSurface
+                        },
                     )
                     Text(
                         text = "(${action.groups.size}组)",
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = when {
+                            isCurrent -> MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            isDone -> MaterialTheme.colorScheme.onSurfaceVariant
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
                 Text(
                     text = if (expanded) "▲" else "▼",
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isCurrent) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 

@@ -51,32 +51,8 @@ object SoundHelper {
      * 播放系统默认提示音
      */
     fun playNotificationSound(context: Context) {
-        try {
-            // 释放之前的资源
-            mediaPlayer?.release()
-
-            // 使用系统默认通知音
-            val notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            mediaPlayer = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                )
-                setDataSource(context, notificationUri)
-                prepare()
-                start()
-                setOnCompletionListener {
-                    it.release()
-                    mediaPlayer = null
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            // 如果失败，使用 ToneGenerator
-            playTone()
-        }
+        val url = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        RingtoneManager.getRingtone(context, url)?.play()
     }
 
     /**
@@ -144,7 +120,7 @@ object SoundHelper {
      */
     fun playRestComplete(context: Context) {
         // 播放声音
-        playSound(context, SoundType.TONE)
+        playSound(context, SoundType.NOTIFICATION)
         // 震动
         vibrate(context, 500)
     }
@@ -155,17 +131,12 @@ object SoundHelper {
     fun vibrate(context: Context, duration: Long = 500) {
         try {
             val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(
-                    VibrationEffect.createOneShot(
-                        duration,
-                        VibrationEffect.DEFAULT_AMPLITUDE
-                    )
+            vibrator?.vibrate(
+                VibrationEffect.createOneShot(
+                    duration,
+                    VibrationEffect.DEFAULT_AMPLITUDE
                 )
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(duration)
-            }
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }

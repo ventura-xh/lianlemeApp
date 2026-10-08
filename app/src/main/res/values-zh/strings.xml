@@ -92,6 +92,7 @@
     <string name="execute_exit_warning">⚠️ 取消后的训练记录将不会被保存</string>
     <string name="execute_exit_confirm">确认取消</string>
     <string name="execute_exit_continue">继续训练</string>
+    <string name="execute_plan_add_action_desc">添加动作</string>
     <string name="execute_plan_done">完成</string>
     <string name="prepare_select_plan">选择计划</string>
     <string name="prepare_switch_plan_desc">切换计划</string>
@@ -140,7 +141,8 @@
     <string name="sync_plan_skip">仅保存记录</string>
 
     <!-- Calendar texts -->
-
+    <string name="calendar_delete_title">删除训练记录？</string>
+    <string name="calendar_delete_message">确定要删除「%1$s」这条训练记录吗？</string>
     <!-- Profile texts -->
 
 
