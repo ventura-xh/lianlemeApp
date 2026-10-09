@@ -54,6 +54,21 @@
     <string name="action_card_copy">Copy Set</string>
     <string name="action_card_delete">Insert Set</string>
     <string name="action_card_insert">Delete Set</string>
+    <string name="plan_card_more_desc">More</string>
+    <string name="plan_card_switch_unit">Switch to %1$s</string>
+    <string name="plan_card_rest_seconds">Rest Duration</string>
+    <string name="plan_card_delete_action">Delete Exercise</string>
+
+    <string name="plan_card_header_group">Set</string>
+    <string name="plan_card_header_weight">Weight (%1$s)</string>
+    <string name="plan_card_header_rep">Reps</string>
+    <string name="plan_card_add_group">Add Set</string>
+    <string name="plan_card_add_group_desc">Add set</string>
+    <string name="plan_card_delete_group_desc">Delete set</string>
+    <string name="plan_card_tap_input">Tap to input</string>
+    <string name="plan_card_rest_title">Rest Duration</string>
+    <string name="plan_card_rest_seconds_value">%1$d s</string>
+
     <string name="plan_detail_bottom_sheet_collapse">▲</string>
     <string name="plan_detail_bottom_sheet_set">Set %1$d</string>
     <string name="plan_detail_bottom_sheet_weight">Weight: %1$f kg</string>

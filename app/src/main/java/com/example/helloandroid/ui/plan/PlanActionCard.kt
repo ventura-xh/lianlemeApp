@@ -23,11 +23,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,12 +47,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.helloandroid.R
 import com.example.helloandroid.entity.model.ActionGroup
 import com.example.helloandroid.entity.model.PlanAction
+import com.example.helloandroid.ui.common.WeightUnit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -59,6 +66,9 @@ fun DraggablePlanActionCard(
     planAction: PlanAction,
     index: Int,
     totalItems: Int,
+    weightUnit: WeightUnit,
+    onToggleUnit: () -> Unit,
+    onEditRest: () -> Unit,
     onMove: (Int, Int) -> Unit,
     onRemove: (Long) -> Unit,
     onAddGroup: (Long) -> Unit,
@@ -73,6 +83,7 @@ fun DraggablePlanActionCard(
     val coroutineScope = rememberCoroutineScope()
     var isExpanded by remember { mutableStateOf(false) }
     var isBeingDragged by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
 
     val dragOffset = remember { Animatable(0f) }
     var moveCooldown by remember { mutableStateOf(false) }
@@ -211,16 +222,90 @@ fun DraggablePlanActionCard(
                     )
                 }
 
-                IconButton(
-                    onClick = { onRemove(planAction.actionId) },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "移除动作",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
+                // ✅ 更多菜单
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.plan_card_more_desc),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.width(200.dp)
+                    ) {
+                        // 1. 单位切换
+                        val targetUnit = if (weightUnit == WeightUnit.KG) WeightUnit.LB else WeightUnit.KG
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.plan_card_switch_unit, targetUnit.label),
+                                    fontSize = 14.sp
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                onToggleUnit()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Straighten,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+
+                        // 2. 间歇时长
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.plan_card_rest_seconds),
+                                    fontSize = 14.sp
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                onEditRest()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Timer,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+
+                        // 3. 删除动作
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.plan_card_delete_action),
+                                    fontSize = 14.sp
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                onRemove(planAction.actionId)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+                    }
                 }
             }
 
@@ -237,19 +322,19 @@ fun DraggablePlanActionCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "组",
+                        text = stringResource(R.string.plan_card_header_group),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.width(28.dp)
                     )
                     Text(
-                        text = "重量(kg)",
+                        text = stringResource(R.string.plan_card_header_weight, weightUnit.label),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "次数",
+                        text = stringResource(R.string.plan_card_header_rep),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f)
@@ -268,6 +353,7 @@ fun DraggablePlanActionCard(
                         group = group,
                         groupIndex = groupIndex,
                         totalGroups = planAction.groups.size,
+                        weightUnit = weightUnit,
                         onRemoveGroup = {
                             if (planAction.groups.size > 1) {
                                 onRemoveGroup(planAction.actionId, group.id)
@@ -294,9 +380,13 @@ fun DraggablePlanActionCard(
                         contentColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "新增一组", modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.plan_card_add_group_desc),
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("新增一组", fontSize = 13.sp)
+                    Text(stringResource(R.string.plan_card_add_group), fontSize = 13.sp)
                 }
             }
         }
@@ -309,6 +399,7 @@ fun NumberInputGroupItem(
     group: ActionGroup,
     groupIndex: Int,
     totalGroups: Int,
+    weightUnit: WeightUnit,
     onRemoveGroup: () -> Unit,
     onEditWeight: () -> Unit,
     onEditReps: () -> Unit
@@ -347,7 +438,7 @@ fun NumberInputGroupItem(
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                text = if (hasWeight) "${String.format("%.1f", weightNum)} kg" else "点击输入",
+                text = if (hasWeight) "${String.format("%.1f", weightNum)}" else "0",
                 fontSize = 14.sp,
                 color = if (hasWeight) {
                     MaterialTheme.colorScheme.onSurface
@@ -371,7 +462,7 @@ fun NumberInputGroupItem(
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                text = if (hasReps) "$repsNum 次" else "点击输入",
+                text = if (hasReps) "$repsNum" else stringResource(R.string.plan_card_tap_input),
                 fontSize = 14.sp,
                 color = if (hasReps) {
                     MaterialTheme.colorScheme.onSurface
@@ -389,7 +480,7 @@ fun NumberInputGroupItem(
         ) {
             Icon(
                 Icons.Default.Delete,
-                contentDescription = "删除组",
+                contentDescription = stringResource(R.string.plan_card_delete_group_desc),
                 tint = if (totalGroups > 1) {
                     MaterialTheme.colorScheme.error
                 } else {

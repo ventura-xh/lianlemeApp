@@ -238,7 +238,8 @@ fun PageExecutePlan(
                     showExitDialog = true
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)  // ✅ 页面浅灰
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -614,13 +615,6 @@ fun ExecuteActionCard(
     val isCurrent = isExpanded && !action.isCompleted   // 当前正在做
     val isDone = action.isCompleted
 
-    // ✅ 容器色
-    val containerColor = when {
-        isCurrent -> MaterialTheme.colorScheme.primaryContainer
-        isDone -> MaterialTheme.colorScheme.surfaceVariant
-        else -> MaterialTheme.colorScheme.surface
-    }
-
     // ✅ 边框色（仅当前动作有）
     val borderColor = if (isCurrent) {
         MaterialTheme.colorScheme.primary
@@ -641,10 +635,10 @@ fun ExecuteActionCard(
                 } else Modifier
             ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (action.isCompleted) 1.dp else 3.dp
+            defaultElevation = 1.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = containerColor
+            containerColor = MaterialTheme.colorScheme.surface   // ✅ 始终白色
         )
     ) {
         Column(
@@ -676,20 +670,17 @@ fun ExecuteActionCard(
                     Text(
                         text = action.actionName,
                         style = MaterialTheme.typography.titleMedium,
-                        color = when {
-                            isCurrent -> MaterialTheme.colorScheme.primary
-                            isDone -> MaterialTheme.colorScheme.onSurfaceVariant
-                            else -> MaterialTheme.colorScheme.onSurface
-                        },
+                        // ✅ 只按完成状态区分文字灰度，不再有"当前"高亮
+                        color = if (action.isCompleted) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
                     Text(
                         text = "(${action.groups.size}组)",
                         fontSize = 14.sp,
-                        color = when {
-                            isCurrent -> MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                            isDone -> MaterialTheme.colorScheme.onSurfaceVariant
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Text(

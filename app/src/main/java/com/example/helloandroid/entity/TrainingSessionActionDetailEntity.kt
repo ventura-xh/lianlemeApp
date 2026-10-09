@@ -24,6 +24,7 @@ data class TrainingSessionActionDetailEntity(
     val groupIndex: Int = 0,       // 第几组
     val weight: Double = 0.0,      // 实际使用的重量
     val reps: Int = 0,             // 实际完成的次数
+    val restSeconds: Long = 60,     // 组间歇
     val isCompleted: Boolean = false, // 是否已完成
     val completedAt: Long = 0      // 完成时间戳
 )

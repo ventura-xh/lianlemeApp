@@ -242,7 +242,7 @@ class ExecutePlanViewModel(
         val nextGroup = findNextUncompletedGroup()
         if (nextGroup != null) {
             if (restTimerJob == null || restTimerJob?.isActive != true) {
-                startRestTimer()
+                startRestTimer(group.restSeconds)
             }
         }
     }
@@ -301,6 +301,7 @@ class ExecutePlanViewModel(
             groupIndex = newGroupIndex,
             weight = 0.0,
             reps = 0,
+            restSeconds = 60,
             isCompleted = false
         )
         action.groups.add(newGroup)
@@ -321,6 +322,7 @@ class ExecutePlanViewModel(
             groupIndex = groupIndex + 1,
             weight = group.weight,
             reps = group.reps,
+            restSeconds = group.restSeconds,
             isCompleted = false
         )
         action.groups.add(groupIndex + 1, newGroup)
@@ -341,6 +343,7 @@ class ExecutePlanViewModel(
             groupIndex = groupIndex,
             weight = 0.0,
             reps = 0,
+            restSeconds = 60,
             isCompleted = false
         )
         action.groups.add(groupIndex, newGroup)
@@ -419,8 +422,8 @@ class ExecutePlanViewModel(
     // ============================================================
 
     // 开始倒计时
-    fun startRestTimer() {
-        val seconds = defaultRestSeconds
+    fun startRestTimer(restSeconds: Long = 60) {
+        val seconds = restSeconds.toInt()
         _restSeconds.value = seconds
         _remainingSeconds.value = seconds
         _showRestDialog.value = true

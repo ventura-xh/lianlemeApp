@@ -37,6 +37,7 @@ data class TrainingSessionWithDetails(
                     groupIndex = detail.groupIndex.toInt(),
                     weight = detail.weight,
                     reps = detail.reps.toInt(),
+                    restSeconds = detail.restSeconds,
                     isCompleted = detail.isCompleted,
                     completedAt = detail.completedAt
                 )
@@ -102,6 +103,7 @@ data class TrainingGroup(
     var groupIndex: Int,
     var weight: Double = 0.0,
     var reps: Int = 0,
+    var restSeconds: Long = 60,
     var isCompleted: Boolean = false,
     var completedAt: Long = 0  // ✅ 新增：完成时间戳
 )

@@ -9,6 +9,7 @@ import com.example.helloandroid.repository.ActionLibRepository
 import com.example.helloandroid.repository.PlanRepository
 import com.example.helloandroid.entity.model.ActionGroup
 import com.example.helloandroid.entity.model.PlanAction
+import com.example.helloandroid.ui.common.WeightUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +24,8 @@ class CreatePlanViewModel(
     private val _selectedActions = MutableStateFlow<List<PlanAction>>(emptyList())
     val selectedActions: StateFlow<List<PlanAction>> = _selectedActions.asStateFlow()
 
+    private val _weightUnit = MutableStateFlow(WeightUnit.KG)
+    val weightUnit: StateFlow<WeightUnit> = _weightUnit.asStateFlow()
 
     // ✅ 添加 _refreshTrigger
     private val _refreshTrigger = MutableStateFlow(0)
@@ -140,6 +143,33 @@ class CreatePlanViewModel(
         _selectedActions.value = emptyList()
     }
 
+    // ✅ 切换单位：只改单位，不动数字
+    fun toggleWeightUnit() {
+        _weightUnit.value = if (_weightUnit.value == WeightUnit.KG) {
+            WeightUnit.LB
+        } else {
+            WeightUnit.KG
+        }
+        // 触发重组，让卡片文案更新
+        _refreshTrigger.value++
+    }
+    // ✅ 更新某个动作所有组的间歇时长
+    fun updateActionRestSeconds(actionId: Long, restSeconds: Long) {
+        _selectedActions.update { current ->
+            current.map { action ->
+                if (action.actionId == actionId) {
+                    // 如果 ActionGroup 没有 restSeconds 字段，需要加上
+                    action.copy(
+                        groups = action.groups.map { it.copy(restSeconds = restSeconds) }
+                            .toMutableList()
+                    )
+                } else {
+                    action
+                }
+            }
+        }
+    }
+
     // ✅ 保存计划
     suspend fun savePlan(planName: String): Result<Long> {
         return try {
@@ -177,7 +207,7 @@ class CreatePlanViewModel(
                             weight = weight,
                             reps = reps,
                             weightUnit = "kg",
-                            restSeconds = 60,
+                            restSeconds = group.restSeconds,
                             isLeftRight = false
                         )
                     )

@@ -48,7 +48,7 @@
     <plurals name="action_card_set">
         <item quantity="other">(%1$d组)</item>
     </plurals>
-    <string name="action_card_weight">重量(kg)</string>
+    <string name="action_card_weight">重量</string>
     <string name="action_card_reps">次数</string>
     <plurals name="action_card_rep_unit">
         <item quantity="other">%1$d 次</item>
@@ -58,6 +58,21 @@
     <string name="action_card_copy">复制组</string>
     <string name="action_card_delete">删除组</string>
     <string name="action_card_insert">插入组</string>
+    <string name="plan_card_more_desc">更多</string>
+    <string name="plan_card_switch_unit">切换到 %1$s</string>
+    <string name="plan_card_rest_seconds">间歇时长</string>
+    <string name="plan_card_delete_action">删除动作</string>
+    <string name="plan_card_rest_title">组间歇时长</string>
+    <string name="plan_card_rest_seconds_value">%1$d 秒</string>
+
+    <string name="plan_card_header_group">组</string>
+    <string name="plan_card_header_weight">重量(%1$s)</string>
+    <string name="plan_card_header_rep">次数</string>
+
+    <string name="plan_card_add_group">新增一组</string>
+    <string name="plan_card_add_group_desc">新增一组</string>
+    <string name="plan_card_delete_group_desc">删除组</string>
+    <string name="plan_card_tap_input">点击输入</string>
 
     <!-- ActionLib texts -->
     <string name="action_lib_drawer_header">💪 部位</string>
@@ -84,7 +99,7 @@
     <string name="action_lib_field_preset">⭐️ 预设</string>
 
     <!-- Exercise texts -->
-    <string name="execute_plan_progress">进度：%1$d %</string>
+    <string name="execute_plan_progress">进度：%1$d%%</string>
     <string name="execute_plan_set">%1$d组</string>
     <string name="execute_plan_add_action">添加动作</string>
     <string name="execute_exit_title">取消训练？</string>

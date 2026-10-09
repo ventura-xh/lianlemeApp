@@ -10,6 +10,7 @@ import com.example.helloandroid.repository.ActionLibRepository
 import com.example.helloandroid.repository.PlanRepository
 import com.example.helloandroid.entity.model.ActionGroup
 import com.example.helloandroid.entity.model.PlanAction
+import com.example.helloandroid.ui.common.WeightUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +37,9 @@ class EditPlanViewModel(
     private val _refreshTrigger = MutableStateFlow(0)
     val refreshTrigger: StateFlow<Int> = _refreshTrigger.asStateFlow()
 
+    private val _weightUnit = MutableStateFlow(WeightUnit.KG)
+    val weightUnit: StateFlow<WeightUnit> = _weightUnit.asStateFlow()
+
     init {
         loadPlanData()
     }
@@ -47,6 +51,17 @@ class EditPlanViewModel(
                 val planDetail = planRepository.getPlanDetail(planId)
                 if (planDetail != null) {
                     _planName.value = planDetail.plan.name
+
+                    // ✅ 取第一条的 weightUnit 作为全局单位（同计划内单位一致）
+                    val firstUnitLabel = planDetail.actions
+                        .firstOrNull()
+                        ?.groups
+                        ?.firstOrNull()
+                        ?.weightUnit
+                    if (firstUnitLabel != null) {
+                        _weightUnit.value = WeightUnit.fromLabel(firstUnitLabel)
+                    }
+
                     val actions = planDetail.actions.map { item ->
                         PlanAction(
                             actionId = item.planAction.actionId,
@@ -106,12 +121,19 @@ class EditPlanViewModel(
     }
 
     // ✅ 为动作新增一组
+    // ✅ 新增一组：复制最后一组数据
     fun addGroup(actionId: Long) {
         _selectedActions.update { current ->
             current.map { action ->
                 if (action.actionId == actionId) {
+                    val lastGroup = action.groups.lastOrNull()
+                    val newGroup = ActionGroup(
+                        id = java.util.UUID.randomUUID().toString(),   // ✅ 保证唯一 id
+                        weight = lastGroup?.weight ?: "0",             // ✅ 复制最后一组重量
+                        reps = lastGroup?.reps ?: "0"                  // ✅ 复制最后一组次数
+                    )
                     action.copy(
-                        groups = (action.groups + ActionGroup()).toMutableList()
+                        groups = (action.groups + newGroup).toMutableList()
                     )
                 } else {
                     action
@@ -174,6 +196,33 @@ class EditPlanViewModel(
             }
         }
     }
+    // ✅ 切换单位：只改单位，不动数字
+    fun toggleWeightUnit() {
+        _weightUnit.value = if (_weightUnit.value == WeightUnit.KG) {
+            WeightUnit.LB
+        } else {
+            WeightUnit.KG
+        }
+        // 触发重组，让卡片文案更新
+        _refreshTrigger.value++
+    }
+
+    // ✅ 更新某个动作所有组的间歇时长
+    fun updateActionRestSeconds(actionId: Long, restSeconds: Long) {
+        _selectedActions.update { current ->
+            current.map { action ->
+                if (action.actionId == actionId) {
+                    // 如果 ActionGroup 没有 restSeconds 字段，需要加上
+                    action.copy(
+                        groups = action.groups.map { it.copy(restSeconds = restSeconds) }
+                            .toMutableList()
+                    )
+                } else {
+                    action
+                }
+            }
+        }
+    }
 
     // ✅ 保存计划（更新）
     suspend fun savePlan(planName: String): Result<Long> {
@@ -196,6 +245,8 @@ class EditPlanViewModel(
             // 删除旧的关联数据
             planRepository.deletePlanActionsByPlanId(planId)
 
+            val currentUnitLabel = _weightUnit.value.label
+
             // 重新插入
             actions.forEachIndexed { index, planAction ->
                 val planActionId = planRepository.insertPlanAction(
@@ -216,8 +267,8 @@ class EditPlanViewModel(
                             groupIndex = groupIndex.toLong(),
                             weight = weight,
                             reps = reps,
-                            weightUnit = "kg",
-                            restSeconds = 60,
+                            weightUnit = currentUnitLabel,
+                            restSeconds = group.restSeconds,
                             isLeftRight = false
                         )
                     )

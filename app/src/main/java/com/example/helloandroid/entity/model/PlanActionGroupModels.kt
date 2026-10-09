@@ -18,5 +18,6 @@ data class ActionGroup(
     val id: String = UUID.randomUUID().toString(), // 唯一标识，用于列表更新
     var weight: String = "",
     var reps: String = "",
+    var restSeconds: Long = 60,
     var isLeftRight: Boolean = false
 )

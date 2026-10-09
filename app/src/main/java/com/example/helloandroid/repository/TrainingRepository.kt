@@ -51,6 +51,7 @@ class TrainingRepository(
                     groupIndex = index,
                     weight = detail.weight,
                     reps = detail.reps.toInt(),
+                    restSeconds = detail.restSeconds,
                     isCompleted = false
                 )
             }.toMutableList()

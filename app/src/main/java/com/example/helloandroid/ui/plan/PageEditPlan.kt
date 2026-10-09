@@ -1,5 +1,6 @@
 package com.example.helloandroid.ui.plan
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.helloandroid.FitApplication
+import com.example.helloandroid.R
 import com.example.helloandroid.entity.model.ActionGroup
 import com.example.helloandroid.navigation.Screen
 import com.example.helloandroid.repository.ActionLibRepository
@@ -78,6 +81,9 @@ fun PageEditPlan(
     var showSaveError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var draggingIndex by remember { mutableStateOf(-1) }
+
+    val weightUnit by viewModel.weightUnit.collectAsStateWithLifecycle()
+    var restDialogActionId by remember { mutableStateOf<Long?>(null) }
 
     val lazyListState = rememberLazyListState()
 
@@ -263,6 +269,11 @@ fun PageEditPlan(
                                 planAction = planAction,
                                 index = index,
                                 totalItems = selectedActions.size,
+                                weightUnit = weightUnit,
+                                onToggleUnit = { viewModel.toggleWeightUnit() },
+                                onEditRest = {
+                                    restDialogActionId = planAction.actionId
+                                },
                                 onMove = { from, to ->
                                     viewModel.moveAction(from, to)
                                 },
@@ -405,6 +416,36 @@ fun PageEditPlan(
             confirmButton = {
                 TextButton(onClick = { showSaveError = false }) {
                     Text("确定")
+                }
+            }
+        )
+    }
+
+    // ✅ 间歇时长选择框
+    restDialogActionId?.let { actionId ->
+        AlertDialog(
+            onDismissRequest = { restDialogActionId = null },
+            title = { Text(stringResource(R.string.plan_card_rest_title)) },
+            text = {
+                Column {
+                    listOf(30L, 60L, 90L, 120L, 180L).forEach { sec ->
+                        Text(
+                            text = stringResource(R.string.plan_card_rest_seconds_value, sec),
+                            fontSize = 15.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.updateActionRestSeconds(actionId, sec)
+                                    restDialogActionId = null
+                                }
+                                .padding(vertical = 12.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { restDialogActionId = null }) {
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
