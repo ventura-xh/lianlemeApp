@@ -63,6 +63,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun DraggablePlanActionCard(
+    modifier: Modifier = Modifier,
     planAction: PlanAction,
     index: Int,
     totalItems: Int,
@@ -76,7 +77,6 @@ fun DraggablePlanActionCard(
     onWeightChange: (Long, String, String) -> Unit,
     onRepsChange: (Long, String, String) -> Unit,
     isDragging: Boolean = false,
-    modifier: Modifier = Modifier,
     onEditWeight: (ActionGroup, Int, Long, String) -> Unit = { _, _, _, _ -> },
     onEditReps: (ActionGroup, Int, Long, String) -> Unit = { _, _, _, _ -> }
 ) {
@@ -242,11 +242,10 @@ fun DraggablePlanActionCard(
                         modifier = Modifier.width(200.dp)
                     ) {
                         // 1. 单位切换
-                        val targetUnit = if (weightUnit == WeightUnit.KG) WeightUnit.LB else WeightUnit.KG
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = stringResource(R.string.plan_card_switch_unit, targetUnit.label),
+                                    text = stringResource(R.string.plan_card_switch_unit),
                                     fontSize = 14.sp
                                 )
                             },

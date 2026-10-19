@@ -10,12 +10,14 @@
     <string name="common_confirm">Confirm</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_delete">Delete</string>
+    <string name="common_delete_desc">Delete</string>
     <string name="common_ok">OK</string>
     <string name="common_add">Add</string>
     <string name="common_clean">Clear</string>
     <string name="common_save">Save</string>
     <string name="common_back">Back</string>
     <string name="common_loading">Loading....</string>
+    <string name="common_close_desc">Close</string>
     <!-- CommonUI texts -->
     <string name="common_countdown_hint">⏱️ You can confirm in %1$d s</string>
     <string name="common_confirm_with_countdown">%1$s (%2$ds)</string>
@@ -55,7 +57,7 @@
     <string name="action_card_delete">Insert Set</string>
     <string name="action_card_insert">Delete Set</string>
     <string name="plan_card_more_desc">More</string>
-    <string name="plan_card_switch_unit">Switch to %1$s</string>
+    <string name="plan_card_switch_unit">Switch weight unit</string>
     <string name="plan_card_rest_seconds">Rest Duration</string>
     <string name="plan_card_delete_action">Delete Exercise</string>
 
@@ -104,6 +106,10 @@
     <string name="execute_plan_add_action">Add Exercise</string>
     <string name="execute_plan_add_action_desc">Add Exercise</string>
     <string name="execute_plan_done">Done</string>
+    <string name="execute_plan_done_desc">Done</string>
+    <string name="execute_plan_back_desc">Cancel</string>
+    <string name="execute_plan_timer_desc">Timer</string>
+    <string name="execute_plan_finished_desc">Finished</string>
     <string name="execute_exit_title">Cancel Workout?</string>
     <string name="execute_exit_message">This workout isn\'t finished yet. Are you sure you want to cancel?</string>
     <string name="execute_exit_warning">⚠️ The workout record will not be saved</string>

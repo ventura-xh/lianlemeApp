@@ -1,17 +1,20 @@
 package com.example.helloandroid.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import com.example.helloandroid.R
 
-sealed class BottomNavScreen(val route: String, val label: String, val icon: ImageVector, val isCenterSpecial: Boolean = false) {
-    data object TrainingPlan : BottomNavScreen("training_plan", "计划", Icons.Filled.NoteAlt)
-    data object ActionLib : BottomNavScreen("action_lib", "动作", Icons.Filled.FitnessCenter)
-    data object Calendar : BottomNavScreen("calendar", "日程", Icons.Filled.CalendarMonth)
-    data object Profile : BottomNavScreen("profile", "我的", Icons.Filled.Person)
+sealed class BottomNavScreen(val route: String, @StringRes val labelRes: Int, val icon: ImageVector, val isCenterSpecial: Boolean = false) {
+    data object TrainingPlan : BottomNavScreen("training_plan", R.string.plan, Icons.Filled.NoteAlt)
+    data object ActionLib : BottomNavScreen("action_lib", R.string.action, Icons.Filled.FitnessCenter)
+    data object Calendar : BottomNavScreen("calendar", R.string.calendar, Icons.Filled.CalendarMonth)
+    data object Profile : BottomNavScreen("profile", R.string.profile, Icons.Filled.Person)
 
 }
 

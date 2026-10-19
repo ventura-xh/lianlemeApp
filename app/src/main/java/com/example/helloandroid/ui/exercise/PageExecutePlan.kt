@@ -63,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -107,6 +108,8 @@ fun PageExecutePlan(
     val currentGroup = currentAction?.groups?.getOrNull(currentGroupIndex)
     val currentGroupIndexDisplay = currentGroup?.groupIndex ?: 0
     val totalGroupsInAction = currentAction?.groups?.size ?: 0
+
+    var expandedIndex by remember(session) { mutableStateOf<Int?>(null) }
 
     // ✅ 倒计时状态
     val showRestDialog by viewModel.showRestDialog.collectAsStateWithLifecycle()
@@ -221,6 +224,11 @@ fun PageExecutePlan(
         }
     }
 
+    // ✅ currentActionIndex 变化时，自动展开当前动作
+    LaunchedEffect(currentActionIndex) {
+        expandedIndex = currentActionIndex
+    }
+
     // ✅ 拦截系统返回事件
     BackHandler(enabled = true) {
         navController.popBackStack(Screen.TrainingPlan.route, inclusive = false)
@@ -310,7 +318,10 @@ fun PageExecutePlan(
                         ExecuteActionCard(
                             action = action,
                             actionIndex = index,
-                            isExpanded = index == currentActionIndex,
+                            isExpanded = index == expandedIndex,
+                            onToggleExpand = {
+                                expandedIndex = if (expandedIndex == index) null else index   // ✅ 手风琴切换
+                            },
                             onToggleGroupCompleted = { actionIndex, groupIndex ->
                                 viewModel.toggleGroupCompleted(actionIndex, groupIndex)
                             },
@@ -541,7 +552,7 @@ fun ExecuteTopAppBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Timer,
-                    contentDescription = "计时器",
+                    contentDescription = stringResource(R.string.execute_plan_timer_desc),
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
@@ -555,7 +566,7 @@ fun ExecuteTopAppBar(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "返回"
+                    contentDescription = stringResource(R.string.execute_plan_back_desc)
                 )
             }
         },
@@ -569,11 +580,11 @@ fun ExecuteTopAppBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "完成",
+                    contentDescription = stringResource(R.string.execute_plan_done_desc),
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("完成")
+                Text(stringResource(R.string.execute_plan_done))
             }
         },
         modifier = Modifier.height(48.dp),  // 默认约 64dp，48dp 更紧凑
@@ -592,6 +603,7 @@ fun ExecuteActionCard(
     action: TrainingAction,
     actionIndex: Int,
     isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     refreshKey: Int = 0,
     onToggleGroupCompleted: (Int, Int) -> Unit,
     onAddGroup: (Int) -> Unit,
@@ -601,16 +613,11 @@ fun ExecuteActionCard(
     onEditWeight: (Int, TrainingGroup) -> Unit,   // ✅ 新增
     onEditReps: (Int, TrainingGroup) -> Unit      // ✅ 新增
 ) {
-    var expanded by remember { mutableStateOf(isExpanded) }
-
     // ✅ 当 refreshKey 变化时，更新展开状态（触发重组）
     LaunchedEffect(refreshKey) {
         // 什么都不做，只是让这个 Composable 重组
     }
 
-    LaunchedEffect(isExpanded) {
-        expanded = isExpanded
-    }
     // ✅ 三态判断
     val isCurrent = isExpanded && !action.isCompleted   // 当前正在做
     val isDone = action.isCompleted
@@ -651,7 +658,7 @@ fun ExecuteActionCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
-                    .clickable { expanded = !expanded },
+                    .clickable { onToggleExpand() },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -662,7 +669,7 @@ fun ExecuteActionCard(
                     if (action.isCompleted) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "已完成",
+                            contentDescription = stringResource(R.string.execute_plan_finished_desc),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -678,13 +685,13 @@ fun ExecuteActionCard(
                         }
                     )
                     Text(
-                        text = "(${action.groups.size}组)",
+                        text = pluralStringResource(R.plurals.action_card_set, action.groups.size, action.groups.size),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Text(
-                    text = if (expanded) "▲" else "▼",
+                    text = if (isExpanded) "▲" else "▼",
                     fontSize = 16.sp,
                     color = if (isCurrent) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurfaceVariant
@@ -692,7 +699,7 @@ fun ExecuteActionCard(
             }
 
             // ✅ 展开内容
-            if (expanded) {
+            if (isExpanded) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // ✅ 表头 - 只显示一次
@@ -713,7 +720,7 @@ fun ExecuteActionCard(
                     )
                     // 重量列 - 对应组项重量输入框 (width 80dp)
                     Text(
-                        text = "重量",
+                        text = stringResource(R.string.plan_card_header_weight, "kg"),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.width(80.dp),
@@ -721,7 +728,7 @@ fun ExecuteActionCard(
                     )
                     // 次数列 - 对应组项次数输入框 (width 80dp)
                     Text(
-                        text = "次数",
+                        text = stringResource(R.string.plan_card_header_rep),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.width(80.dp),
@@ -729,7 +736,7 @@ fun ExecuteActionCard(
                     )
                     // 完成列 - 对应组项完成按钮 (width 40dp)
                     Text(
-                        text = "完成",
+                        text = stringResource(R.string.execute_plan_done),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.width(40.dp),
@@ -777,9 +784,9 @@ fun ExecuteActionCard(
                         contentColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "新增一组", modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.plan_card_add_group_desc), modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("新增一组", fontSize = 13.sp)
+                    Text(stringResource(R.string.plan_card_add_group), fontSize = 13.sp)
                 }
             }
         }
@@ -851,7 +858,7 @@ fun ExecuteGroupItem(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (weightNum > 0) "${weightNum}kg" else "0",
+                text = if (weightNum > 0) "$weightNum" else "0",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = if (weightNum > 0) {
@@ -876,7 +883,7 @@ fun ExecuteGroupItem(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (repsNum > 0) "${repsNum}次" else "0",
+                text = if (repsNum > 0) "$repsNum" else "0",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = if (repsNum > 0) {
@@ -922,7 +929,7 @@ fun ExecuteGroupItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "更多",
+                    contentDescription = stringResource(R.string.plan_card_more_desc),
                     tint = if (isCompleted) {
                         MaterialTheme.colorScheme.primary
                     } else {
@@ -938,7 +945,12 @@ fun ExecuteGroupItem(
                 modifier = Modifier.width(180.dp)
             ) {
                 DropdownMenuItem(
-                    text = { Text("复制组", fontSize = 14.sp) },
+                    text = {
+                        Text(
+                            stringResource(R.string.action_card_copy),
+                            fontSize = 14.sp
+                        )
+                   },
                     onClick = {
                         showMenu = false
                         onCopy()
@@ -952,7 +964,12 @@ fun ExecuteGroupItem(
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text("插入组", fontSize = 14.sp) },
+                    text = {
+                        Text(
+                            stringResource(R.string.action_card_insert),
+                            fontSize = 14.sp
+                        )
+                    },
                     onClick = {
                         showMenu = false
                         onInsert()
@@ -966,7 +983,12 @@ fun ExecuteGroupItem(
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("删除组", fontSize = 14.sp) },
+                    text = {
+                        Text(
+                            stringResource(R.string.action_card_delete),
+                            fontSize = 14.sp
+                        )
+                    },
                     onClick = {
                         showMenu = false
                         onDelete()

@@ -37,11 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.helloandroid.R
 import com.example.helloandroid.entity.ActionLibEntity
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
@@ -129,7 +131,7 @@ fun ActionDetailDialog(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "删除",
+                                        contentDescription = stringResource(R.string.common_delete_desc),
                                         modifier = Modifier.size(18.dp),
                                         tint = MaterialTheme.colorScheme.error
                                     )
@@ -142,7 +144,7 @@ fun ActionDetailDialog(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "关闭",
+                                    contentDescription = stringResource(R.string.common_close_desc),
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -161,7 +163,7 @@ fun ActionDetailDialog(
                         )
                         if (action.isPreset) {
                             Text(
-                                text = "⭐ 预设",
+                                text = stringResource(R.string.action_lib_field_preset),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -184,7 +186,7 @@ fun ActionDetailDialog(
                             )
                             Column {
                                 Text(
-                                    text = "目标肌肉",
+                                    text = stringResource(R.string.action_lib_field_muscle),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -228,7 +230,7 @@ fun ActionDetailDialog(
                             )
                             Column {
                                 Text(
-                                    text = "动作要领",
+                                    text = stringResource(R.string.action_lib_field_description),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -256,7 +258,7 @@ fun ActionDetailDialog(
                             )
                             Column {
                                 Text(
-                                    text = "注意事项",
+                                    text = stringResource(R.string.action_lib_field_tips),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.error

@@ -121,7 +121,7 @@ class TrainingRepository(
                         weight = group.weight,
                         reps = group.reps,
                         isCompleted = group.isCompleted,
-                        completedAt = group.completedAt
+                        completedAt = group.completedAt,
                     )
                 )
             }

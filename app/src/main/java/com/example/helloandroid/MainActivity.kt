@@ -2,6 +2,7 @@ package com.example.helloandroid
 
 import android.os.Bundle
 import android.os.Trace.isEnabled
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,9 +70,21 @@ class MainActivity : ComponentActivity() {
         ExecutePlanViewModel.factory
     }
 
+    companion object {
+        init {
+            System.loadLibrary("native-lib")
+        }
+    }
+
+    external fun getJniString(): String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // ✅ 调用 C++ 方法，拿到字符串，打印到 Logcat
+        val jniString = getJniString()
+        Log.d("JniTest", "从 C++ 拿到：$jniString")
 
         // ✅ 监听应用前后台切换
         setupAppLifecycleObserver()
@@ -273,7 +287,7 @@ fun CustomBottomNavBar(
                     val selected = currentRoute == screen.route
                     NavItem(
                         icon = screen.icon,
-                        label = screen.label,
+                        label = stringResource(screen.labelRes),
                         selected = selected,
                         onClick = { onNavigate(screen)}
                     )

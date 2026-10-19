@@ -11,12 +11,14 @@
     <string name="common_confirm">确认</string>
     <string name="common_cancel">取消</string>
     <string name="common_delete">删除</string>
+    <string name="common_delete_desc">删除</string>
     <string name="common_ok">确定</string>
     <string name="common_add">添加</string>
     <string name="common_clean">清除</string>
     <string name="common_save">保存</string>
     <string name="common_back">返回</string>
     <string name="common_loading">加载中....</string>
+    <string name="common_close_desc">关闭</string>
     <!-- ==================== 通用确认对话框 ==================== -->
     <string name="common_countdown_hint">⏱️ %1$d秒后可确认</string>
     <string name="common_confirm_with_countdown">%1$s (%2$ds)</string>
@@ -59,7 +61,7 @@
     <string name="action_card_delete">删除组</string>
     <string name="action_card_insert">插入组</string>
     <string name="plan_card_more_desc">更多</string>
-    <string name="plan_card_switch_unit">切换到 %1$s</string>
+    <string name="plan_card_switch_unit">切换重量单位</string>
     <string name="plan_card_rest_seconds">间歇时长</string>
     <string name="plan_card_delete_action">删除动作</string>
     <string name="plan_card_rest_title">组间歇时长</string>
@@ -109,6 +111,10 @@
     <string name="execute_exit_continue">继续训练</string>
     <string name="execute_plan_add_action_desc">添加动作</string>
     <string name="execute_plan_done">完成</string>
+    <string name="execute_plan_done_desc">完成</string>
+    <string name="execute_plan_back_desc">完成</string>
+    <string name="execute_plan_timer_desc">计时器</string>
+    <string name="execute_plan_finished_desc">已完成</string>
     <string name="prepare_select_plan">选择计划</string>
     <string name="prepare_switch_plan_desc">切换计划</string>
     <string name="prepare_back_desc">返回</string>
