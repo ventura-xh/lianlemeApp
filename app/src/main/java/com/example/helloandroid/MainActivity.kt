@@ -50,6 +50,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.helloandroid.jni.NativeLoader.getJniString
 import com.example.helloandroid.manager.TrainingStateManager
 import com.example.helloandroid.navigation.AppNavGraph
 import com.example.helloandroid.navigation.BottomNavScreen
@@ -76,15 +77,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    external fun getJniString(): String
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        // ✅ 调用 C++ 方法，拿到字符串，打印到 Logcat
-        val jniString = getJniString()
-        Log.d("JniTest", "从 C++ 拿到：$jniString")
 
         // ✅ 监听应用前后台切换
         setupAppLifecycleObserver()
